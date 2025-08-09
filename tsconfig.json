@@ -10,7 +10,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
+    "target": "es2022",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
@@ -22,9 +22,11 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@social/modules/*": ["src/modules/*"],
+      "@social/auths/*": ["src/modules/auths/*"],
+      "@social/users/*": ["src/modules/users/*"],
+      "@social/decorators/*": ["src/configs/decorators/*"],
       "@social/utils/*": ["src/utils/*"],
-      "@social/config/*": ["src/configs/*"],
+      "@social/database/*": ["src/configs/database/*"],
       "@social/services/*": ["src/services/*"]
     }
   }
