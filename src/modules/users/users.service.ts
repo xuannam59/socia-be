@@ -32,6 +32,16 @@ export class UsersService {
     return user.toObject();
   }
 
+  async findByEmail(email: string) {
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) {
+      throw new BadRequestException('Email or password is incorrect');
+    }
+
+    return user.toObject();
+  }
+
   async findAll() {
     return `This action returns all users`;
   }

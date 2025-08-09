@@ -1,4 +1,4 @@
-import { ResponseMessageKey } from '@social/decorators/customize';
+import { ResponseMessageKey } from 'src/libs/decorators/customize';
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';

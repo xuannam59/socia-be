@@ -5,6 +5,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { ConfigService } from '@nestjs/config';
 import { TransformInterceptor } from './configs/core/transform.interceptor';
+import { JwtAuthGuard } from '@social/guards/jwt-auth.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -31,6 +32,8 @@ async function bootstrap() {
 
   const reflector = app.get(Reflector);
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
+
+  app.useGlobalGuards(new JwtAuthGuard(reflector));
 
   try {
     await app.listen(configService.get<number>('PORT', 3000));
