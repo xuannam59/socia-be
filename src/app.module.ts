@@ -3,16 +3,20 @@ import { AppController } from './app.controller';
 import { ConfigModule } from '@nestjs/config';
 import { AuthsModule } from './modules/auths/auths.module';
 import { UsersModule } from './modules/users/users.module';
+import { MailsModule } from './modules/mails/mails.module';
 import { DatabaseModule } from './configs/database/database.module';
+import { BullMQConfigModule } from './configs/bullmq/bullmqConfig.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    BullMQConfigModule,
     DatabaseModule,
     AuthsModule,
     UsersModule,
+    MailsModule,
   ],
   controllers: [AppController],
   providers: [],

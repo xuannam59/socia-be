@@ -1,0 +1,84 @@
+<html lang='vi'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Xác thực OTP - Social Network</title>
+  </head>
+  <body
+    style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; min-height: 100vh; background-color: #f5f5f5;"
+  >
+    <div
+      style='max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15); border: 1px solid #e0e0e0;'
+    >
+      <!-- Header -->
+      <div
+        style='background: linear-gradient(135deg, #3793b6 0%, #b5af3a 50%, #ff6b6b 100%); padding: 20px 10px; text-align: center; color: white; display: flex; align-items: center; justify-content: center;'
+      >
+        <div style='font-size: 32px; font-weight: bold; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);'>JunSocial</div>
+      </div>
+
+      <!-- Content -->
+      <div style='padding: 50px 30px; text-align: center; background-color: #ffffff;'>
+        <div style='font-size: 28px; color: #2c3e50; margin-bottom: 25px; font-weight: 700;'>Xin chào {{name}}! 👋</div>
+        <div
+          style='font-size: 17px; color: #5a6c7d; margin-bottom: 35px; line-height: 1.8; max-width: 500px; margin-left: auto; margin-right: auto;'
+        >
+          Chúng tôi nhận được yêu cầu xác thực tài khoản của bạn. Vui lòng sử dụng mã OTP bên dưới để hoàn tất quá trình
+          xác thực.
+        </div>
+
+        <!-- OTP Container -->
+        <div
+          style='background: linear-gradient(145deg, #ffffff 0%, #f1f8ff 100%); border: 3px solid #3793b6; border-radius: 18px; padding: 40px; margin: 40px 0; box-shadow: 0 10px 30px rgba(55, 147, 182, 0.15);'
+        >
+          <div
+            style='background: linear-gradient(135deg, #3793b6, #b5af3a); color: white; padding: 8px 20px; border-radius: 25px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 20px;'
+          >
+            🔐 Mã xác thực
+          </div>
+          <div
+            style="font-size: 42px; font-weight: 900; color: #3793b6; letter-spacing: 12px; font-family: 'Courier New', monospace; margin: 20px 0;"
+          >{{otp}}</div>
+          <div
+            style='font-size: 15px; color: #7f8c8d; margin-top: 25px; font-style: italic; background: linear-gradient(135deg, #ffeaa7, #fab1a0); padding: 10px 20px; border-radius: 20px; display: inline-block;'
+          >
+            ⏰ Mã này có hiệu lực trong 3 phút
+          </div>
+        </div>
+
+        <!-- Warning -->
+        <div
+          style='background-color: #fff8e1; border: 2px solid #ffb74d; border-radius: 15px; padding: 25px; margin: 20px 0; text-align: left; box-shadow: 0 5px 15px rgba(255, 183, 77, 0.2);'
+        >
+          <div
+            style='background-color: #ff9800; color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; margin-bottom: 15px;'
+          >
+            ⚠️ Lưu ý quan trọng
+          </div>
+          <div style='color: #e65100; font-size: 15px; line-height: 1.8;'>
+            • 🚫 Không chia sẻ mã OTP này với bất kỳ ai<br />
+            • ⏱️ Mã OTP chỉ có hiệu lực trong 5 phút<br />
+            • ❌ Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này<br />
+            • 📧 Để được hỗ trợ, liên hệ:
+            <a
+              href='mailto:leeminhnam2k2@gmail.com'
+              style='color: #3793b6; text-decoration: none; font-weight: 600;'
+            >leeminhnam2k2@gmail.com</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style='background-color: #f8f9fa; padding: 35px; text-align: center; border-top: 2px solid #e0e0e0;'>
+        <div
+          style='height: 3px; background: linear-gradient(90deg, #3793b6, #b5af3a, #ff6b6b); margin-bottom: 20px;'
+        ></div>
+        <div style='font-size: 14px; color: #6c757d; margin-bottom: 20px; line-height: 1.6;'>
+          Email này được gửi tự động, vui lòng không trả lời.<br />
+          © 2025 JunSocial. Tất cả quyền được bảo lưu.
+        </div>
+
+      </div>
+    </div>
+  </body>
+</html>

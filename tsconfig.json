@@ -24,9 +24,10 @@
     "paths": {
       "@social/auths/*": ["src/modules/auths/*"],
       "@social/users/*": ["src/modules/users/*"],
+      "@social/mails/*": ["src/modules/mails/*"],
       "@social/decorators/*": ["src/libs/decorators/*"],
       "@social/utils/*": ["src/utils/*"],
-      "@social/database/*": ["src/configs/database/*"],
+      "@social/configs/*": ["src/configs/*"],
       "@social/services/*": ["src/services/*"],
       "@social/authentication/*": ["src/libs/authentication/*"],
       "@social/guards/*": ["src/libs/guards/*"],

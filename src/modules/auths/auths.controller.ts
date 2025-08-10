@@ -5,6 +5,7 @@ import { RegisterDto } from '@social/users/dto/register-user.dto';
 import { Public, ResponseMessage } from '@social/decorators/customize';
 import { LocalAuthGuard } from '@social/guards/local-auth.guard';
 import type { IRequest } from '@social/types/cores.type';
+import { ResetPasswordDto, VerifyOtpDto } from './dto/auths.dto';
 
 @Controller('auths')
 export class AuthsController {
@@ -24,5 +25,26 @@ export class AuthsController {
   @ResponseMessage('Register a new user')
   register(@Body() registerDto: RegisterDto) {
     return this.authsService.register(registerDto);
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @ResponseMessage('Forgot password')
+  forgotPassword(@Body('email') email: string) {
+    return this.authsService.forgotPassword(email);
+  }
+
+  @Public()
+  @Post('verify-otp')
+  @ResponseMessage('Verify OTP')
+  verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
+    return this.authsService.verifyOtp(verifyOtpDto);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @ResponseMessage('Reset password')
+  resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authsService.resetPassword(resetPasswordDto);
   }
 }

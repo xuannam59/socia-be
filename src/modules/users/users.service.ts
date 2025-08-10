@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
-import { Model } from 'mongoose';
+import { Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { hashPassword } from '@social/utils/hash/hasPassword';
+import { hashPassword } from '@social/utils/hasPassword';
 import { RegisterDto } from './dto/register-user.dto';
 
 @Injectable()
@@ -33,13 +33,19 @@ export class UsersService {
   }
 
   async findByEmail(email: string) {
-    const user = await this.userModel.findOne({ email });
+    const user = await this.userModel.findOne({ email, isBlocked: false });
 
     if (!user) {
       throw new BadRequestException('Email or password is incorrect');
     }
 
     return user.toObject();
+  }
+
+  async resetPassword(email: string, newPassword: string) {
+    const hashedPassword = hashPassword(newPassword);
+    const resetPassword = await this.userModel.updateOne({ email }, { password: hashedPassword });
+    return resetPassword;
   }
 
   async findAll() {
