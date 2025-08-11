@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
-import { Model, ObjectId } from 'mongoose';
+import mongoose, { Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { hashPassword } from '@social/utils/hasPassword';
 import { RegisterDto } from './dto/register-user.dto';
@@ -52,8 +52,18 @@ export class UsersService {
     return `This action returns all users`;
   }
 
-  async findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(_id: string) {
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+      throw new BadRequestException('Invalid user id');
+    }
+    const user = await this.userModel.findOne({
+      _id,
+      isBlocked: false,
+    });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    return user.toObject();
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {

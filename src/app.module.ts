@@ -6,6 +6,7 @@ import { UsersModule } from './modules/users/users.module';
 import { MailsModule } from './modules/mails/mails.module';
 import { DatabaseModule } from './configs/database/database.module';
 import { BullMQConfigModule } from './configs/bullmq/bullmqConfig.module';
+import { RedisConfigModule } from './configs/database/redisConfig.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { BullMQConfigModule } from './configs/bullmq/bullmqConfig.module';
       isGlobal: true,
     }),
     BullMQConfigModule,
+    RedisConfigModule,
     DatabaseModule,
     AuthsModule,
     UsersModule,

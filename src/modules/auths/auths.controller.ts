@@ -47,4 +47,17 @@ export class AuthsController {
   resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authsService.resetPassword(resetPasswordDto);
   }
+
+  @Post('get-account')
+  @ResponseMessage('Get account')
+  getAccount(@Req() req: IRequest) {
+    return this.authsService.getAccount(req.user);
+  }
+
+  @Post('refresh-token')
+  @ResponseMessage('Refresh token')
+  refreshToken(@Req() req: IRequest, @Res({ passthrough: true }) res: Response) {
+    const refreshToken = req.cookies['refresh_token'];
+    return this.authsService.processRefreshToken(refreshToken, res);
+  }
 }

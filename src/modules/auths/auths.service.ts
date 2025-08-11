@@ -1,8 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '@social/users/users.service';
 import { RegisterDto } from '@social/users/dto/register-user.dto';
 import { comparePassword, hashPassword } from '@social/utils/hasPassword';
-import { IUser, IUserPayload } from '@social/types/users.type';
+import { IUser, IUserPayload, IUserResponse } from '@social/types/users.type';
 import { Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -14,11 +14,15 @@ import { ResetPasswordDto, VerifyOtpDto } from './dto/auths.dto';
 import { generateRandom } from '@social/utils/generateRandom';
 import { MailsService } from '@social/mails/mails.service';
 import { ISendMail } from '@social/types/mail.type';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
+import { IBlacklist } from '@social/types/auths.type';
 
 @Injectable()
 export class AuthsService {
   constructor(
     @InjectModel(ForgotPassword.name) private forgotPasswordModel: Model<ForgotPasswordDocument>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -28,6 +32,14 @@ export class AuthsService {
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
     if (user) {
+      const blacklistEntry = await this.cacheManager.get<IBlacklist>(`blacklist:${user._id.toString()}`);
+      if (blacklistEntry) {
+        if (blacklistEntry.expiresAt && blacklistEntry.expiresAt < new Date()) {
+          await this.cacheManager.del(`blacklist:${user._id.toString()}`);
+        } else {
+          throw new UnauthorizedException(`User is blocked: ${blacklistEntry.reason}`);
+        }
+      }
       const isPasswordValid = comparePassword(password, user.password);
       if (isPasswordValid) {
         return user;
@@ -52,7 +64,7 @@ export class AuthsService {
       maxAge: ms(this.configService.get<StringValue>('JWT_REFRESH_EXPIRE', '7d')),
     });
 
-    const data = {
+    const data: IUserResponse = {
       _id: user._id,
       email: user.email,
       fullname: user.fullname,
@@ -144,5 +156,52 @@ export class AuthsService {
     return {
       email,
     };
+  }
+
+  async getAccount(user: IUser) {
+    const { _id } = user;
+    const userInfo = await this.usersService.findOne(_id);
+
+    const data: IUserResponse = {
+      _id,
+      email: userInfo.email,
+      fullname: userInfo.fullname,
+      role: userInfo.role,
+      avatar: userInfo.avatar,
+      phone: userInfo.phone,
+      address: userInfo.address,
+      status: userInfo.status,
+    };
+    return data;
+  }
+
+  async processRefreshToken(refreshToken: string, res: Response) {
+    try {
+      const decoded = this.jwtService.verify(refreshToken, {
+        secret: this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET'),
+      });
+
+      const user = await this.usersService.findOne(decoded._id);
+
+      const payload: IUserPayload = {
+        _id: user._id.toString(),
+        email: user.email,
+        fullname: user.fullname,
+        role: user.role,
+      };
+
+      const access_token = this.jwtService.sign(payload);
+      const refresh_token = this.createRefreshToken(payload);
+
+      res.cookie('refresh_token', refresh_token, {
+        httpOnly: true,
+        maxAge: ms(this.configService.get<StringValue>('JWT_REFRESH_EXPIRE', '7d')),
+      });
+
+      return access_token;
+    } catch (error) {
+      res.clearCookie('refresh_token');
+      throw new BadRequestException('Refresh token is invalid!');
+    }
   }
 }
