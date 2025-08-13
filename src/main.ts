@@ -15,10 +15,9 @@ async function bootstrap() {
   app.use(cookieParser());
   app.enableCors({
     origin: true,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
+    credentials: true,
   });
 
   app.useGlobalPipes(

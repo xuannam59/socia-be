@@ -11,3 +11,10 @@ export interface IBlacklist {
     ipAddress: string;
   };
 }
+
+export interface IGoogleUser {
+  googleId: string;
+  email: string;
+  fullname: string;
+  avatar: string;
+}

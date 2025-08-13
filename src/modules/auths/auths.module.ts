@@ -10,6 +10,7 @@ import { JwtStrategy } from '@social/authentication/jwt.strategy';
 import { MailsModule } from '@social/mails/mails.module';
 import { ForgotPassword, ForgotPasswordSchema } from './schemas/forgot-password.schema';
 import { MongooseModule } from '@nestjs/mongoose';
+import { GoogleStrategy } from '@social/authentication/google.strategy';
 
 @Module({
   imports: [
@@ -26,6 +27,6 @@ import { MongooseModule } from '@nestjs/mongoose';
     MailsModule,
   ],
   controllers: [AuthsController],
-  providers: [AuthsService, LocalStrategy, JwtStrategy],
+  providers: [AuthsService, LocalStrategy, JwtStrategy, GoogleStrategy],
 })
 export class AuthsModule {}

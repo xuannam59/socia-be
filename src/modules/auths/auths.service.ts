@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '@social/users/users.service';
 import { RegisterDto } from '@social/users/dto/register-user.dto';
-import { comparePassword, hashPassword } from '@social/utils/hasPassword';
+import { comparePassword } from '@social/utils/hasPassword';
 import { IUser, IUserPayload, IUserResponse } from '@social/types/users.type';
 import { Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
@@ -16,7 +16,8 @@ import { MailsService } from '@social/mails/mails.service';
 import { ISendMail } from '@social/types/mail.type';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
-import { IBlacklist } from '@social/types/auths.type';
+import { IBlacklist, IGoogleUser } from '@social/types/auths.type';
+import { IRequest } from '@social/types/cores.type';
 
 @Injectable()
 export class AuthsService {
@@ -48,6 +49,11 @@ export class AuthsService {
     return null;
   }
 
+  async validateGoogleUser(googleUser: IGoogleUser) {
+    const user = await this.usersService.findOrCreateGoogleUser(googleUser);
+    return user;
+  }
+
   async login(user: IUser, res: Response) {
     const payload: IUserPayload = {
       _id: user._id,
@@ -76,6 +82,19 @@ export class AuthsService {
       access_token,
     };
     return data;
+  }
+
+  async googleLogin(req: IRequest, res: Response) {
+    const { user } = req;
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    if (!req.user) {
+      res.redirect(`${frontendUrl}/login?status=false`);
+      return;
+    }
+
+    const result = await this.login(user, res);
+    res.redirect(`${frontendUrl}/login?status=true&access_token=${result.access_token}`);
+    return;
   }
 
   createRefreshToken(payload: IUserPayload) {
@@ -203,5 +222,12 @@ export class AuthsService {
       res.clearCookie('refresh_token');
       throw new BadRequestException('Refresh token is invalid!');
     }
+  }
+
+  async logout(res: Response) {
+    res.clearCookie('refresh_token');
+    return {
+      message: 'Logout successfully',
+    };
   }
 }

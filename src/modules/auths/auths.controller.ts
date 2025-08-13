@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthsService } from './auths.service';
 import { RegisterDto } from '@social/users/dto/register-user.dto';
@@ -6,6 +6,7 @@ import { Public, ResponseMessage } from '@social/decorators/customize';
 import { LocalAuthGuard } from '@social/guards/local-auth.guard';
 import type { IRequest } from '@social/types/cores.type';
 import { ResetPasswordDto, VerifyOtpDto } from './dto/auths.dto';
+import { GoogleOAuthGuard } from '@social/guards/google-oauth.guard';
 
 @Controller('auths')
 export class AuthsController {
@@ -18,6 +19,18 @@ export class AuthsController {
   login(@Req() req: IRequest, @Res({ passthrough: true }) res: Response) {
     const user = req.user;
     return this.authsService.login(user, res);
+  }
+
+  @Public()
+  @Get('google-login')
+  @UseGuards(GoogleOAuthGuard)
+  async googleAuth(@Req() req) {}
+
+  @Public()
+  @Get('google-redirect')
+  @UseGuards(GoogleOAuthGuard)
+  googleAuthRedirect(@Req() req: IRequest, @Res({ passthrough: false }) res: Response) {
+    return this.authsService.googleLogin(req, res);
   }
 
   @Public()
@@ -54,10 +67,17 @@ export class AuthsController {
     return this.authsService.getAccount(req.user);
   }
 
+  @Public()
   @Post('refresh-token')
   @ResponseMessage('Refresh token')
   refreshToken(@Req() req: IRequest, @Res({ passthrough: true }) res: Response) {
     const refreshToken = req.cookies['refresh_token'];
     return this.authsService.processRefreshToken(refreshToken, res);
+  }
+
+  @Post('logout')
+  @ResponseMessage('Logout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    return this.authsService.logout(res);
   }
 }

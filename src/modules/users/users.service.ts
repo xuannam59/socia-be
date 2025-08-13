@@ -5,6 +5,8 @@ import mongoose, { Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { hashPassword } from '@social/utils/hasPassword';
 import { RegisterDto } from './dto/register-user.dto';
+import { IGoogleUser } from '@social/types/auths.type';
+import { generateRandom } from '@social/utils/generateRandom';
 
 @Injectable()
 export class UsersService {
@@ -32,6 +34,12 @@ export class UsersService {
     return user.toObject();
   }
 
+  async resetPassword(email: string, newPassword: string) {
+    const hashedPassword = hashPassword(newPassword);
+    const resetPassword = await this.userModel.updateOne({ email }, { password: hashedPassword });
+    return resetPassword;
+  }
+
   async findByEmail(email: string) {
     const user = await this.userModel.findOne({ email, isBlocked: false });
 
@@ -42,10 +50,22 @@ export class UsersService {
     return user.toObject();
   }
 
-  async resetPassword(email: string, newPassword: string) {
-    const hashedPassword = hashPassword(newPassword);
-    const resetPassword = await this.userModel.updateOne({ email }, { password: hashedPassword });
-    return resetPassword;
+  async findOrCreateGoogleUser(googleUser: IGoogleUser) {
+    const { email, googleId, fullname, avatar } = googleUser;
+    const existEmail = await this.userModel.findOne({ email });
+    if (!existEmail) {
+      const hashedPassword = hashPassword(generateRandom(12));
+      const user = await this.userModel.create({
+        fullname,
+        email,
+        password: hashedPassword,
+        avatar,
+        googleId,
+      });
+      return user.toObject();
+    }
+    await this.userModel.updateOne({ email }, { googleId });
+    return existEmail.toObject();
   }
 
   async findAll() {
