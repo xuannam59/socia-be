@@ -1,12 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { User, UserDocument } from './schemas/user.schema';
-import mongoose, { Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { hashPassword } from '@social/utils/hasPassword';
-import { RegisterDto } from './dto/register-user.dto';
 import { IGoogleUser } from '@social/types/auths.type';
 import { generateRandom } from '@social/utils/generateRandom';
+import { hashPassword } from '@social/utils/hasPassword';
+import mongoose, { Model } from 'mongoose';
+import { RegisterDto } from './dto/register-user.dto';
+import { User, UserDocument } from './schemas/user.schema';
 
 @Injectable()
 export class UsersService {
@@ -68,10 +67,6 @@ export class UsersService {
     return existEmail.toObject();
   }
 
-  async findAll() {
-    return `This action returns all users`;
-  }
-
   async findOne(_id: string) {
     if (!mongoose.Types.ObjectId.isValid(_id)) {
       throw new BadRequestException('Invalid user id');
@@ -84,14 +79,5 @@ export class UsersService {
       throw new BadRequestException('User not found');
     }
     return user.toObject();
-  }
-
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    console.log(updateUserDto);
-    return `This action updates a #${id} user`;
-  }
-
-  async remove(id: number) {
-    return `This action removes a #${id} user`;
   }
 }

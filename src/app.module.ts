@@ -7,6 +7,7 @@ import { MailsModule } from './modules/mails/mails.module';
 import { DatabaseModule } from './configs/database/database.module';
 import { BullMQConfigModule } from './configs/bullmq/bullmqConfig.module';
 import { RedisConfigModule } from './configs/database/redisConfig.module';
+import { FriendsModule } from './modules/friends/friends.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { RedisConfigModule } from './configs/database/redisConfig.module';
     AuthsModule,
     UsersModule,
     MailsModule,
+    FriendsModule,
   ],
   controllers: [AppController],
   providers: [],

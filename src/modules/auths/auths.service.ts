@@ -93,7 +93,7 @@ export class AuthsService {
     }
 
     const result = await this.login(user, res);
-    res.redirect(`${frontendUrl}/login?status=true&access_token=${result.access_token}`);
+    res.redirect(`${frontendUrl}?access_token=${result.access_token}`);
     return;
   }
 
