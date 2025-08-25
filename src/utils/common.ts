@@ -23,7 +23,6 @@ export const convertSlug = (str: string) => {
 // Tối ưu cho performance và organization
 export const generateS3Key = (filename: string, contentType: string, userId: string): string => {
   const uuid = uuidv4();
-  const slug = convertSlug(filename);
   const ext = contentType.split('/')[1] || filename.split('.').pop();
 
   const now = new Date();
@@ -32,7 +31,7 @@ export const generateS3Key = (filename: string, contentType: string, userId: str
 
   const category = getFileCategory(contentType);
 
-  return `${category}/${year}/${month}/${userId}_${uuid}/${slug}.${ext}`;
+  return `${category}/${userId}/${year}/${month}/${uuid}.${ext}`;
 };
 
 export const getFileCategory = (contentType: string) => {

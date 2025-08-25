@@ -9,6 +9,8 @@ import { BullMQConfigModule } from './configs/bullmq/bullmqConfig.module';
 import { RedisConfigModule } from './configs/database/redisConfig.module';
 import { FriendsModule } from './modules/friends/friends.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
+import { PostsModule } from './modules/posts/posts.module';
+import { CommentsModule } from './modules/comments/comments.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { UploadsModule } from './modules/uploads/uploads.module';
     MailsModule,
     FriendsModule,
     UploadsModule,
+    PostsModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [],

@@ -13,7 +13,6 @@ import { IUser } from '@social/types/users.type';
 @Injectable()
 export class UploadsService {
   constructor(private readonly s3Service: S3Service) {}
-
   // Khởi tạo chunked upload
   async initChunkedUpload(initChunkedUploadDto: InitChunkedUploadDto, user: IUser) {
     const { filename, contentType, fileSize } = initChunkedUploadDto;

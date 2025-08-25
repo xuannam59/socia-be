@@ -23,6 +23,12 @@ export class User {
   @Prop({ type: String })
   cover: string;
 
+  @Prop({ type: Date })
+  dateOfBirth: Date; // Thêm ngày sinh
+
+  @Prop({ type: String, enum: ['male', 'female', 'other'] })
+  gender: string;
+
   @Prop({ type: String })
   phone: string;
 
@@ -32,14 +38,25 @@ export class User {
   @Prop({ type: String })
   address: string;
 
-  @Prop({ type: String })
+  @Prop({ type: String, default: 'active', enum: ['active', 'inactive'] })
   status: string;
+
+  @Prop({ type: Boolean, default: false })
+  isOnline: boolean;
 
   @Prop({ type: Boolean, default: false })
   isBlocked: boolean;
 
   @Prop({ type: Date, default: null })
   blockedDate: Date;
+
+  @Prop({ type: Date, default: null })
+  lastActive: Date;
+
+  @Prop({ type: String })
+  slug: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.index({ email: 1 });

@@ -63,7 +63,9 @@ export class UsersService {
       });
       return user.toObject();
     }
-    await this.userModel.updateOne({ email }, { googleId });
+    if (!existEmail.googleId) {
+      await this.userModel.updateOne({ email }, { googleId });
+    }
     return existEmail.toObject();
   }
 
