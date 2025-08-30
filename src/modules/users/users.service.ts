@@ -6,6 +6,7 @@ import { hashPassword } from '@social/utils/hasPassword';
 import mongoose, { Model } from 'mongoose';
 import { RegisterDto } from './dto/register-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
+import { convertSlug } from '@social/utils/common';
 
 @Injectable()
 export class UsersService {
@@ -29,6 +30,7 @@ export class UsersService {
       fullname,
       email,
       password: hashedPassword,
+      slug: convertSlug(fullname),
     });
     return user.toObject();
   }
@@ -60,6 +62,7 @@ export class UsersService {
         password: hashedPassword,
         avatar,
         googleId,
+        slug: convertSlug(fullname),
       });
       return user.toObject();
     }

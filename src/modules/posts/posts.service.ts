@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { IUser } from '@social/types/users.type';
 import { Model } from 'mongoose';
-import { CreatePostDto } from './dto/create-post.dto';
+import { CreatePostDto, CreatePostLikeDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostLike } from './schemas/post-like.schema';
 import { Post } from './schemas/post.schema';
@@ -22,7 +22,7 @@ export class PostsService {
       medias,
       userTags,
       feelings,
-      userId: user._id,
+      authorId: user._id,
     };
     const result = await this.postModel.create(payload);
     return {
@@ -30,8 +30,82 @@ export class PostsService {
     };
   }
 
-  findAll() {
-    return `This action returns all posts`;
+  async actionLike(createPostLikeDto: CreatePostLikeDto, user: IUser) {
+    const { postId, type, isLike } = createPostLikeDto;
+
+    const existingPostLike = await this.postLikeModel.findOne({
+      authorId: user._id,
+      postId,
+    });
+
+    if (!existingPostLike && !isLike) return;
+
+    if (isLike) {
+      if (existingPostLike) {
+        if (existingPostLike.type !== type) {
+          await this.postLikeModel.updateOne({ _id: existingPostLike._id }, { type });
+        }
+      } else {
+        // socket emit
+        await Promise.all([
+          this.postLikeModel.create({ authorId: user._id, postId, type }),
+          this.postModel.updateOne({ _id: postId }, { $inc: { likeCount: 1 } }),
+        ]);
+      }
+    } else {
+      if (existingPostLike) {
+        await Promise.all([
+          this.postLikeModel.deleteOne({ _id: existingPostLike._id }),
+          this.postModel.updateOne({ _id: postId }, { $inc: { likeCount: -1 } }),
+        ]);
+      }
+    }
+
+    return {
+      type,
+      isLike,
+    };
+  }
+
+  async findUserLike(postId: string, user: IUser) {
+    const existPostLike = await this.postLikeModel.findOne({ authorId: user._id, postId });
+    return {
+      _id: existPostLike?._id,
+      type: existPostLike?.type,
+    };
+  }
+
+  async findAll(query: any, user: IUser) {
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+    const posts = await this.postModel
+      .find({ authorId: user._id })
+      .populate('authorId', 'fullname avatar')
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    // Map qua posts để thêm thông tin like của user hiện tại
+    const postsWithLikeStatus = await Promise.all(
+      posts.map(async post => {
+        const userLike = await this.postLikeModel.findOne({
+          authorId: user._id,
+          postId: post._id.toString(),
+        });
+
+        const liked = {
+          isLiked: userLike ? true : false,
+          type: userLike ? userLike.type : null,
+        };
+
+        return {
+          ...post.toObject(),
+          userLiked: liked,
+        };
+      }),
+    );
+
+    return postsWithLikeStatus;
   }
 
   findOne(id: number) {

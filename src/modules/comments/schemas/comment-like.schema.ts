@@ -9,7 +9,10 @@ export class CommentLike {
   commentId: Types.ObjectId;
 
   @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
-  userId: Types.ObjectId;
+  authorId: Types.ObjectId;
+
+  @Prop({ default: false, type: Number, enum: [1, 2, 3, 4, 5, 6] })
+  type: number;
 }
 
 export const CommentLikeSchema = SchemaFactory.createForClass(CommentLike);

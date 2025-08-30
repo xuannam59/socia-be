@@ -6,7 +6,7 @@ export type PostDocument = HydratedDocument<Post>;
 @Schema({ timestamps: true })
 export class Post {
   @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
-  userId: Types.ObjectId;
+  authorId: Types.ObjectId;
 
   @Prop({ required: true })
   content: string;
@@ -41,5 +41,5 @@ export class Post {
 
 export const PostSchema = SchemaFactory.createForClass(Post);
 
-PostSchema.index({ userId: 1, createdAt: -1 }); // Get posts by author
+PostSchema.index({ authorId: 1, createdAt: -1 }); // Get posts by author
 PostSchema.index({ createdAt: -1 }); // Get posts by createdAt

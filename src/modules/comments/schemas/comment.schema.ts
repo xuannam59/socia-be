@@ -16,12 +16,31 @@ export class Comment {
 
   @Prop({ type: [Object] })
   media: {
-    type: 'image' | 'video';
-    url: string;
+    type: 'image';
+    keyS3: string;
+  }[];
+
+  @Prop({
+    type: [
+      {
+        userId: { type: Types.ObjectId, ref: 'User' },
+        position: {
+          start: { type: Number },
+          end: { type: Number },
+        },
+      },
+    ],
+  })
+  mention: {
+    userId: Types.ObjectId;
+    position: {
+      start: number;
+      end: number;
+    };
   }[];
 
   @Prop({ type: Types.ObjectId, ref: 'PostComment', default: null })
-  parentId: Types.ObjectId;
+  parentId: Types.ObjectId | null;
 
   @Prop({ type: Number, default: 0 })
   likeCount: number;

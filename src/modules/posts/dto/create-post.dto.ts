@@ -1,4 +1,5 @@
-import { IsArray, IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsIn, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreatePostDto {
   @IsString()
@@ -24,4 +25,17 @@ export class CreatePostDto {
   @IsString()
   @IsOptional()
   feelings: string;
+}
+
+export class CreatePostLikeDto {
+  @IsNotEmpty()
+  @IsMongoId()
+  postId: Types.ObjectId;
+
+  @IsNotEmpty()
+  @IsIn([1, 2, 3, 4, 5, 6])
+  type: number;
+
+  @IsNotEmpty()
+  isLike: boolean;
 }

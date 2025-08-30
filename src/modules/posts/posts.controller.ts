@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { CreatePostDto } from './dto/create-post.dto';
+import { CreatePostDto, CreatePostLikeDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import type { IRequest } from '@social/types/cores.type';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('posts')
 export class PostsController {
@@ -13,9 +14,19 @@ export class PostsController {
     return this.postsService.create(createPostDto, req.user);
   }
 
+  @Post('likes')
+  actionLike(@Body() createPostLikeDto: CreatePostLikeDto, @Req() req: IRequest) {
+    return this.postsService.actionLike(createPostLikeDto, req.user);
+  }
+
+  @Get('likes/:postId')
+  findUserLike(@Param('postId') postId: string, @Req() req: IRequest) {
+    return this.postsService.findUserLike(postId, req.user);
+  }
+
   @Get()
-  findAll() {
-    return this.postsService.findAll();
+  findAll(@Query() query, @Req() req: IRequest) {
+    return this.postsService.findAll(query, req.user);
   }
 
   @Get(':id')
