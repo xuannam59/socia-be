@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { IUser } from '@social/types/users.type';
 import { Model } from 'mongoose';
@@ -6,6 +6,7 @@ import { CreatePostDto, CreatePostLikeDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostLike } from './schemas/post-like.schema';
 import { Post } from './schemas/post.schema';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class PostsService {
@@ -79,7 +80,7 @@ export class PostsService {
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
     const posts = await this.postModel
-      .find({ authorId: user._id })
+      .find()
       .populate('authorId', 'fullname avatar')
       .skip(skip)
       .limit(limit)
@@ -108,8 +109,15 @@ export class PostsService {
     return postsWithLikeStatus;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async findOne(id: string) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid post id');
+    }
+    const post = await this.postModel.findOne({ _id: id });
+    if (!post) {
+      throw new BadRequestException('Post not found');
+    }
+    return post.toObject();
   }
 
   update(id: number, updatePostDto: UpdatePostDto) {

@@ -1,11 +1,20 @@
-import { IsArray, IsMongoId, IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { Types } from 'mongoose';
+import {
+  IsArray,
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class MentionDto {
-  @IsMongoId()
   @IsNotEmpty()
-  userId: Types.ObjectId;
+  userId: string;
 
   @IsObject()
   @IsNotEmpty()
@@ -28,6 +37,12 @@ export class CreateCommentDto {
   @IsOptional()
   parentId: string;
 
+  @IsNumber()
+  @IsNotEmpty()
+  @Min(0)
+  @Max(2)
+  level: number;
+
   @IsArray()
   @IsOptional()
   media: {
@@ -39,5 +54,18 @@ export class CreateCommentDto {
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => MentionDto)
-  mention: MentionDto[];
+  mentions: MentionDto[];
+}
+
+export class CreateCommentLikeDto {
+  @IsNotEmpty()
+  @IsString()
+  commentId: string;
+
+  @IsNotEmpty()
+  @IsIn([1, 2, 3, 4, 5, 6])
+  type: number;
+
+  @IsNotEmpty()
+  isLike: boolean;
 }

@@ -30,6 +30,7 @@ export class UsersService {
       fullname,
       email,
       password: hashedPassword,
+      googleId: null,
       slug: convertSlug(fullname),
     });
     return user.toObject();

@@ -16,5 +16,5 @@ export class CommentLike {
 }
 
 export const CommentLikeSchema = SchemaFactory.createForClass(CommentLike);
-CommentLikeSchema.index({ commentId: 1, userId: 1 }); // Check if user has liked comment
+CommentLikeSchema.index({ commentId: 1, authorId: 1 }); // Check if user has liked comment
 CommentLikeSchema.index({ commentId: 1 }); // Get likes of user

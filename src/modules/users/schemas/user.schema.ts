@@ -17,7 +17,7 @@ export class User {
   @Prop({ type: String })
   avatar: string;
 
-  @Prop({ type: String, unique: true })
+  @Prop({ type: String, default: null })
   googleId: string;
 
   @Prop({ type: String })

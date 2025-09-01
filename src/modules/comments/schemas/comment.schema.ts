@@ -23,7 +23,7 @@ export class Comment {
   @Prop({
     type: [
       {
-        userId: { type: Types.ObjectId, ref: 'User' },
+        userId: { type: String, ref: 'User' },
         position: {
           start: { type: Number },
           end: { type: Number },
@@ -31,8 +31,8 @@ export class Comment {
       },
     ],
   })
-  mention: {
-    userId: Types.ObjectId;
+  mentions: {
+    userId: string;
     position: {
       start: number;
       end: number;
@@ -41,6 +41,9 @@ export class Comment {
 
   @Prop({ type: Types.ObjectId, ref: 'PostComment', default: null })
   parentId: Types.ObjectId | null;
+
+  @Prop({ type: Number, min: 0, max: 2 })
+  level: number;
 
   @Prop({ type: Number, default: 0 })
   likeCount: number;
@@ -56,5 +59,6 @@ export class Comment {
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);
-CommentSchema.index({ postId: 1, createdAt: -1 }); // Get comments of post
+CommentSchema.index({ postId: 1, level: 1, createdAt: -1 }); // Get comments of post
+CommentSchema.index({ parentId: 1, level: 1, createdAt: -1 }); // Get comments of parent
 CommentSchema.index({ authorId: 1, createdAt: -1 }); // Get comments by author
