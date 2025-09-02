@@ -1,4 +1,4 @@
-import { Controller, Req, Post, Body, Param, Get, Query } from '@nestjs/common';
+import { Controller, Req, Post, Body, Param, Get, Query, Delete } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto, CreateCommentLikeDto } from './dto/create-comment.dto';
 import type { IRequest } from '@social/types/cores.type';
@@ -21,5 +21,10 @@ export class CommentsController {
   @Post('likes')
   actionLike(@Body() createCommentLikeDto: CreateCommentLikeDto, @Req() req: IRequest) {
     return this.commentsService.actionLike(createCommentLikeDto, req.user);
+  }
+
+  @Delete(':id')
+  deleteComment(@Param('id') commentId: string, @Req() req: IRequest) {
+    return this.commentsService.deleteComment(commentId, req.user);
   }
 }

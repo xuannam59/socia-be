@@ -7,5 +7,6 @@ import { S3Module } from '@social/configs/clouds/s3.module';
   imports: [S3Module],
   controllers: [UploadsController],
   providers: [UploadsService],
+  exports: [UploadsService],
 })
 export class UploadsModule {}

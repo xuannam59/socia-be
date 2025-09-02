@@ -8,6 +8,8 @@ import { IUser } from '@social/types/users.type';
 import { PostsService } from '../posts/posts.service';
 import { Post, PostDocument } from '../posts/schemas/post.schema';
 import { ICommentQuery } from '@social/types/comment.type';
+import pLimit from 'p-limit';
+import { UploadsService } from '../uploads/uploads.service';
 
 @Injectable()
 export class CommentsService {
@@ -15,10 +17,11 @@ export class CommentsService {
     @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
     @InjectModel(CommentLike.name) private commentLikeModel: Model<CommentLikeDocument>,
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    private readonly uploadsService: UploadsService,
   ) {}
 
   async create(createCommentDto: CreateCommentDto, user: IUser) {
-    const { content, postId, parentId, media, mentions, level } = createCommentDto;
+    const { content, postId, parentId, medias, mentions, level } = createCommentDto;
     const existingPost = await this.postModel.findById(postId);
     if (!existingPost) {
       throw new BadRequestException('Post not exist');
@@ -28,7 +31,7 @@ export class CommentsService {
       content,
       postId,
       parentId,
-      media,
+      medias,
       mentions,
       authorId: user._id,
       level,
@@ -135,6 +138,65 @@ export class CommentsService {
     return {
       type,
       isLike,
+    };
+  }
+
+  async deleteComment(commentId: string, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(commentId)) {
+      throw new BadRequestException('Comment not found');
+    }
+
+    const [existingComment, childrenOfComment] = await Promise.all([
+      this.commentModel.findOne({ _id: commentId, authorId: user._id }),
+      this.commentModel.find({ parentId: commentId }),
+    ]);
+    if (!existingComment) {
+      throw new BadRequestException('Comment not found');
+    }
+
+    const keysS3: string[] = [];
+    if (existingComment.medias.length > 0) {
+      keysS3.push(existingComment.medias[0].keyS3);
+    }
+
+    const level = existingComment.level;
+    const parentId = existingComment.parentId;
+    const limit = pLimit(10);
+    const findTasks: any[] = [];
+    const commentIds = [commentId];
+    for (const child of childrenOfComment) {
+      const findTask = limit(async () => {
+        if (child.medias.length > 0) {
+          keysS3.push(child.medias[0].keyS3);
+        }
+        commentIds.push(child._id.toString());
+        const childrenOfChild = await this.commentModel.find({ parentId: child._id.toString() }, { _id: 1, medias: 1 });
+        childrenOfChild.forEach(c => {
+          commentIds.push(c._id.toString());
+          if (c.medias.length > 0) {
+            keysS3.push(c.medias[0].keyS3);
+          }
+        });
+      });
+      findTasks.push(findTask);
+    }
+    await Promise.all(findTasks);
+    const promises: any[] = [
+      this.commentModel.deleteMany({ _id: { $in: commentIds } }),
+      this.commentLikeModel.deleteMany({ commentId: { $in: commentIds } }),
+      this.postModel.updateOne({ _id: existingComment.postId }, { $inc: { commentCount: -commentIds.length } }),
+      this.uploadsService.deleteFiles(keysS3),
+    ];
+    if (level > 0) {
+      promises.push(this.commentModel.updateOne({ _id: parentId }, { $inc: { replyCount: -1 } }));
+    }
+
+    await Promise.all(promises);
+
+    return {
+      countDeleted: commentIds.length,
+      postId: existingComment.postId,
+      commentId,
     };
   }
 }

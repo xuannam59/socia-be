@@ -9,6 +9,7 @@ import {
   InitChunkedUploadDto,
 } from './dto/upload.dto';
 import { IUser } from '@social/types/users.type';
+import pLimit from 'p-limit';
 
 @Injectable()
 export class UploadsService {
@@ -69,5 +70,19 @@ export class UploadsService {
   async deleteFile(key: string) {
     if (!key) throw new BadRequestException('Key is required');
     return this.s3Service.deleteObject(key);
+  }
+
+  async deleteFiles(keys: string[]) {
+    if (keys.length === 0) return;
+    const limit = pLimit(10);
+    const deleteTasks: any[] = [];
+    for (const key of keys) {
+      const deleteTask = limit(async () => {
+        await this.s3Service.deleteObject(key);
+      });
+      deleteTasks.push(deleteTask);
+    }
+    await Promise.all(deleteTasks);
+    return 'Deleted files successfully';
   }
 }

@@ -26,7 +26,7 @@ class MentionDto {
 
 export class CreateCommentDto {
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   content: string;
 
   @IsString()
@@ -45,7 +45,7 @@ export class CreateCommentDto {
 
   @IsArray()
   @IsOptional()
-  media: {
+  medias: {
     type: 'image';
     keyS3: string;
   }[];

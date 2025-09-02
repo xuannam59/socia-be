@@ -11,11 +11,11 @@ export class Comment {
   @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
   authorId: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({ type: String })
   content: string;
 
   @Prop({ type: [Object] })
-  media: {
+  medias: {
     type: 'image';
     keyS3: string;
   }[];

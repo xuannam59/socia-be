@@ -6,6 +6,7 @@ import { Comment, CommentSchema } from './schemas/comment.schema';
 import { CommentLike, CommentLikeSchema } from './schemas/comment-like.schema';
 import { PostsModule } from '../posts/posts.module';
 import { Post, PostSchema } from '../posts/schemas/post.schema';
+import { UploadsModule } from '../uploads/uploads.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { Post, PostSchema } from '../posts/schemas/post.schema';
       { name: Post.name, schema: PostSchema },
     ]),
     PostsModule,
+    UploadsModule,
   ],
   controllers: [CommentsController],
   providers: [CommentsService],
