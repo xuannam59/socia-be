@@ -14,11 +14,11 @@ export class Comment {
   @Prop({ type: String })
   content: string;
 
-  @Prop({ type: [Object] })
-  medias: {
+  @Prop({ type: Object })
+  media: {
     type: 'image';
     keyS3: string;
-  }[];
+  };
 
   @Prop({
     type: [

@@ -43,12 +43,12 @@ export class CreateCommentDto {
   @Max(2)
   level: number;
 
-  @IsArray()
+  @IsObject()
   @IsOptional()
-  medias: {
+  media: {
     type: 'image';
     keyS3: string;
-  }[];
+  };
 
   @IsArray()
   @IsOptional()

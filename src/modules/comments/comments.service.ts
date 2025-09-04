@@ -21,7 +21,7 @@ export class CommentsService {
   ) {}
 
   async create(createCommentDto: CreateCommentDto, user: IUser) {
-    const { content, postId, parentId, medias, mentions, level } = createCommentDto;
+    const { content, postId, parentId, media, mentions, level } = createCommentDto;
     const existingPost = await this.postModel.findById(postId);
     if (!existingPost) {
       throw new BadRequestException('Post not exist');
@@ -31,7 +31,7 @@ export class CommentsService {
       content,
       postId,
       parentId,
-      medias,
+      media,
       mentions,
       authorId: user._id,
       level,
@@ -155,8 +155,8 @@ export class CommentsService {
     }
 
     const keysS3: string[] = [];
-    if (existingComment.medias.length > 0) {
-      keysS3.push(existingComment.medias[0].keyS3);
+    if (existingComment.media && existingComment.media.keyS3) {
+      keysS3.push(existingComment.media.keyS3);
     }
 
     const level = existingComment.level;
@@ -166,15 +166,15 @@ export class CommentsService {
     const commentIds = [commentId];
     for (const child of childrenOfComment) {
       const findTask = limit(async () => {
-        if (child.medias.length > 0) {
-          keysS3.push(child.medias[0].keyS3);
+        if (child.media && child.media.keyS3) {
+          keysS3.push(child.media.keyS3);
         }
         commentIds.push(child._id.toString());
         const childrenOfChild = await this.commentModel.find({ parentId: child._id.toString() }, { _id: 1, medias: 1 });
         childrenOfChild.forEach(c => {
           commentIds.push(c._id.toString());
-          if (c.medias.length > 0) {
-            keysS3.push(c.medias[0].keyS3);
+          if (c.media && c.media.keyS3) {
+            keysS3.push(c.media.keyS3);
           }
         });
       });
