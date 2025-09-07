@@ -129,10 +129,7 @@ export class AuthsService {
       name: user.fullname,
     };
 
-    await Promise.all([
-      this.mailsService.sendMailForgotPassword(infoMail),
-      this.forgotPasswordModel.create({ email, otp }),
-    ]);
+    await Promise.all([this.mailsService.sendOtpEmail(infoMail), this.forgotPasswordModel.create({ email, otp })]);
 
     return {
       email,
