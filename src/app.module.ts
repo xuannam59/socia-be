@@ -11,6 +11,7 @@ import { FriendsModule } from './modules/friends/friends.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { CommentsModule } from './modules/comments/comments.module';
+import { StoriesModule } from './modules/stories/stories.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { CommentsModule } from './modules/comments/comments.module';
     UploadsModule,
     PostsModule,
     CommentsModule,
+    StoriesModule,
   ],
   controllers: [AppController],
   providers: [],
