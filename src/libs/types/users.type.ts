@@ -8,6 +8,10 @@ export interface IUser {
   role: string;
   address: string;
   status: string;
+  followers: string[];
+  following: string[];
+  endStoryAt: Date;
+  isOnline: boolean;
   isBlocked: boolean;
   blockedDate: Date;
   createdAt: Date;

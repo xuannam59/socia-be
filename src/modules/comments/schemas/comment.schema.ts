@@ -1,14 +1,16 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+import { User } from '@social/users/schemas/user.schema';
+import { Post } from 'src/modules/posts/schemas/post.schema';
 
 export type CommentDocument = HydratedDocument<Comment>;
 
 @Schema({ timestamps: true })
 export class Comment {
-  @Prop({ required: true, type: Types.ObjectId, ref: 'Post' })
+  @Prop({ required: true, type: Types.ObjectId, ref: Post.name })
   postId: Types.ObjectId;
 
-  @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
+  @Prop({ required: true, type: Types.ObjectId, ref: User.name })
   authorId: Types.ObjectId;
 
   @Prop({ type: String })
@@ -23,7 +25,7 @@ export class Comment {
   @Prop({
     type: [
       {
-        userId: { type: String, ref: 'User' },
+        userId: { type: String, ref: User.name },
         position: {
           start: { type: Number },
           end: { type: Number },
@@ -39,7 +41,7 @@ export class Comment {
     };
   }[];
 
-  @Prop({ type: Types.ObjectId, ref: 'PostComment', default: null })
+  @Prop({ type: Types.ObjectId, ref: Comment.name, default: null })
   parentId: Types.ObjectId | null;
 
   @Prop({ type: Number, min: 0, max: 2 })

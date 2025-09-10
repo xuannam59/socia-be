@@ -1,14 +1,16 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+import { User } from '@social/users/schemas/user.schema';
+import { Comment } from './comment.schema';
 
 export type CommentLikeDocument = HydratedDocument<CommentLike>;
 
 @Schema({ timestamps: true })
 export class CommentLike {
-  @Prop({ required: true, type: Types.ObjectId, ref: 'Comment' })
+  @Prop({ required: true, type: Types.ObjectId, ref: Comment.name })
   commentId: Types.ObjectId;
 
-  @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
+  @Prop({ required: true, type: Types.ObjectId, ref: User.name })
   authorId: Types.ObjectId;
 
   @Prop({ default: false, type: Number, enum: [1, 2, 3, 4, 5, 6] })

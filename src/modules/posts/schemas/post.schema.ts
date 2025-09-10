@@ -1,11 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+import { User } from '@social/users/schemas/user.schema';
 
 export type PostDocument = HydratedDocument<Post>;
 
 @Schema({ timestamps: true })
 export class Post {
-  @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
+  @Prop({ required: true, type: Types.ObjectId, ref: User.name })
   authorId: Types.ObjectId;
 
   @Prop({ required: true })
@@ -20,7 +21,7 @@ export class Post {
     keyS3: string;
   }[];
 
-  @Prop({ type: [Types.ObjectId], ref: 'User' })
+  @Prop({ type: [Types.ObjectId], ref: User.name })
   userTags: Types.ObjectId[];
 
   @Prop()

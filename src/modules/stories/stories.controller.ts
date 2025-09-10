@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query } from '@nestjs/common';
 import { StoriesService } from './stories.service';
 import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import type { IRequest } from '@social/types/cores.type';
+import type { IStoryQuery } from '@social/types/stoies.type';
 
 @Controller('stories')
 export class StoriesController {
@@ -14,8 +15,8 @@ export class StoriesController {
   }
 
   @Get()
-  findAll() {
-    return this.storiesService.findAll();
+  findAll(@Query() query: IStoryQuery, @Req() req: IRequest) {
+    return this.storiesService.findAll(query, req.user);
   }
 
   @Get(':id')

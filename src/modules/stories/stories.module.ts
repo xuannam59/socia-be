@@ -3,9 +3,19 @@ import { StoriesService } from './stories.service';
 import { StoriesController } from './stories.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Story, StorySchema } from './schemas/story.schema';
+import { StoryLike, StoryLikeSchema } from './schemas/story-like.schema';
+import { StoryViewer, StoryViewerSchema } from './schemas/story-viewer.schema';
+import { User, UserSchema } from '@social/users/schemas/user.schema';
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: Story.name, schema: StorySchema }])],
+  imports: [
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Story.name, schema: StorySchema },
+      { name: StoryLike.name, schema: StoryLikeSchema },
+      { name: StoryViewer.name, schema: StoryViewerSchema },
+    ]),
+  ],
   controllers: [StoriesController],
   providers: [StoriesService],
 })

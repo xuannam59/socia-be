@@ -26,7 +26,7 @@ export class User {
   @Prop({ type: Date })
   dateOfBirth: Date; // Thêm ngày sinh
 
-  @Prop({ type: String, enum: ['male', 'female', 'other'] })
+  @Prop({ type: String, enum: ['male', 'female', 'other'], default: 'other' })
   gender: string;
 
   @Prop({ type: String })
@@ -40,6 +40,15 @@ export class User {
 
   @Prop({ type: String, default: 'active', enum: ['active', 'inactive'] })
   status: string;
+
+  @Prop({ type: [String], default: [] })
+  followers: string[];
+
+  @Prop({ type: [String], default: [] })
+  following: string[];
+
+  @Prop({ type: Date, default: null })
+  endStoryAt: Date;
 
   @Prop({ type: Boolean, default: false })
   isOnline: boolean;

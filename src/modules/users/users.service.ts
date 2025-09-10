@@ -77,10 +77,12 @@ export class UsersService {
     if (!mongoose.Types.ObjectId.isValid(_id)) {
       throw new BadRequestException('Invalid user id');
     }
-    const user = await this.userModel.findOne({
-      _id,
-      isBlocked: false,
-    });
+    const user = await this.userModel
+      .findOne({
+        _id,
+        isBlocked: false,
+      })
+      .select('-password');
     if (!user) {
       throw new BadRequestException('User not found');
     }
