@@ -78,12 +78,7 @@ export class CommentsService {
       filter.parentId = query.parentId;
     }
 
-    const comments = await this.commentModel
-      .find(filter)
-      .populate('authorId', 'fullname avatar')
-      .limit(10)
-      .sort({ createdAt: -1 })
-      .lean();
+    const comments = await this.commentModel.find(filter).populate('authorId', 'fullname avatar').lean();
 
     const commentsWithLikeStatus = await Promise.all(
       comments.map(async comment => {

@@ -19,9 +19,9 @@ export class StoriesController {
     return this.storiesService.findAll(query, req.user);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.storiesService.findOne(+id);
+  @Get(':userId')
+  findUserStory(@Param('userId') userId: string, @Req() req: IRequest) {
+    return this.storiesService.findUserStory(userId, req.user);
   }
 
   @Patch(':id')

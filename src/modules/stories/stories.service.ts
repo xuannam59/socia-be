@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import type { IUser } from '@social/types/users.type';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { Story, StoryDocument } from './schemas/story.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { IStoryQuery } from '@social/types/stoies.type';
@@ -38,12 +38,16 @@ export class StoriesService {
     ]);
 
     return {
-      _id: result._id,
+      _id: user._id,
+      fullname: user.fullname,
+      avatar: user.avatar,
+      endStoryAt,
+      stories: [result],
     };
   }
 
   async findAll(query: IStoryQuery, user: IUser) {
-    const { page, limit } = query;
+    const { page, limit, viewUserId } = query;
     const pageNumber = page ? Number(page) : 1;
     const limitNumber = limit ? Number(limit) : 10;
     const skip = (pageNumber - 1) * limitNumber;
@@ -54,7 +58,13 @@ export class StoriesService {
     };
 
     const [usersHaveNewStories, totalUserStories] = await Promise.all([
-      this.userModel.find(filterUser).select('fullname avatar').limit(limitNumber).skip(skip),
+      this.userModel
+        .find(filterUser)
+        .select('fullname avatar endStoryAt')
+        .limit(limitNumber)
+        .skip(skip)
+        .sort({ endStoryAt: -1 })
+        .lean(),
       this.userModel.countDocuments(filterUser),
     ]);
 
@@ -67,30 +77,39 @@ export class StoriesService {
     };
 
     const [listStories, myStories] = await Promise.all([
-      this.storyModel.find(filterStory).lean(),
+      this.storyModel.find(filterStory).sort({ createdAt: 1 }).lean(),
       this.storyModel
         .find({
           authorId: user._id,
           expiresAt: { $gt: new Date() },
         })
+        .sort({ createdAt: 1 })
         .lean(),
     ]);
 
-    const userStories = usersHaveNewStories.map(user => {
-      const stories = listStories.filter(story => story.authorId === user._id.toString());
-      return {
-        _id: user._id.toString(),
-        fullname: user.fullname,
-        avatar: user.avatar,
-        stories,
-      };
-    });
+    const userStories = usersHaveNewStories
+      .map(user => {
+        const stories = listStories.filter(story => story.authorId === user._id.toString());
+        return {
+          _id: user._id.toString(),
+          fullname: user.fullname,
+          avatar: user.avatar,
+          endStoryAt: user.endStoryAt,
+          stories,
+        };
+      })
+      .sort((a, b) => {
+        if (a._id === viewUserId) return -1;
+        if (b._id === viewUserId) return 1;
+        return 0;
+      });
 
     if (myStories.length > 0) {
       userStories.unshift({
         _id: user._id.toString(),
         fullname: user.fullname,
         avatar: user.avatar,
+        endStoryAt: user.endStoryAt,
         stories: myStories,
       });
     }
@@ -104,8 +123,34 @@ export class StoriesService {
     };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} story`;
+  async findUserStory(userId: string, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid user id');
+    }
+
+    const [stories, userInfo] = await Promise.all([
+      this.storyModel
+        .find({
+          authorId: userId,
+          expiresAt: { $gt: new Date() },
+          privacy: { $ne: 'private' },
+        })
+        .sort({ createdAt: 1 })
+        .lean(),
+      this.userModel.findOne({ _id: userId }).select('fullname avatar endStoryAt').lean(),
+    ]);
+
+    if (!userInfo) {
+      throw new BadRequestException('User not found');
+    }
+
+    return {
+      _id: userInfo._id,
+      fullname: userInfo.fullname,
+      avatar: userInfo.avatar,
+      endStoryAt: userInfo.endStoryAt,
+      stories,
+    };
   }
 
   update(id: number, updateStoryDto: UpdateStoryDto) {

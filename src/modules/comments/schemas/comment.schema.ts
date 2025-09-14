@@ -61,6 +61,10 @@ export class Comment {
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);
-CommentSchema.index({ postId: 1, level: 1, createdAt: -1 }); // Get comments of post
-CommentSchema.index({ parentId: 1, level: 1, createdAt: -1 }); // Get comments of parent
-CommentSchema.index({ authorId: 1, createdAt: -1 }); // Get comments by author
+
+// Optimized indexes for better query performance
+CommentSchema.index({ postId: 1, level: 1, createdAt: -1 }); // Get comments of post (compound index)
+CommentSchema.index({ parentId: 1, level: 1, createdAt: -1 }); // Get replies of a comment
+CommentSchema.index({ authorId: 1, createdAt: -1 }); // Get user's comments
+CommentSchema.index({ postId: 1, createdAt: -1 }); // General post comments query
+CommentSchema.index({ level: 1, createdAt: -1 }); // Level-based queries
