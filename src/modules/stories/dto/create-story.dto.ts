@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsIn, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class CreateStoryDto {
   @IsOptional()
@@ -23,4 +23,10 @@ export class CreateStoryDto {
   @IsNotEmpty()
   @IsString()
   backgroundColor: string;
+}
+
+export class CreateStoryLikeDto {
+  @IsNotEmpty()
+  @IsIn([1, 2, 3, 4, 5, 6])
+  type: number;
 }

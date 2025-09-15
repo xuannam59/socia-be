@@ -29,6 +29,12 @@ export class Story {
   @Prop({ type: String, required: true })
   backgroundColor: string;
 
+  @Prop({ type: [Object], default: [] })
+  userLikes: {
+    userId: string;
+    type: number;
+  }[];
+
   @Prop({ type: Number, default: 0 })
   viewCount: number;
 

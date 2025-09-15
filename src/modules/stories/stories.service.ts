@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreateStoryDto } from './dto/create-story.dto';
+import { CreateStoryDto, CreateStoryLikeDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import type { IUser } from '@social/types/users.type';
 import mongoose, { Model } from 'mongoose';
@@ -150,6 +150,36 @@ export class StoriesService {
       avatar: userInfo.avatar,
       endStoryAt: userInfo.endStoryAt,
       stories,
+    };
+  }
+
+  async actionLike(storyId: string, createStoryLikeDto: CreateStoryLikeDto, user: IUser) {
+    const { type } = createStoryLikeDto;
+    if (!mongoose.Types.ObjectId.isValid(storyId)) {
+      throw new BadRequestException('Invalid story ID');
+    }
+
+    const existingStory = await this.storyModel.findById(storyId);
+    if (!existingStory) {
+      throw new BadRequestException('Story not found');
+    }
+
+    const result = await this.storyModel.updateOne(
+      { _id: storyId, 'userLikes.userId': user._id },
+      { $set: { 'userLikes.$.type': type } },
+    );
+
+    if (result.modifiedCount === 0) {
+      await this.storyModel.updateOne({ _id: storyId }, { $push: { userLikes: { userId: user._id, type } } });
+      return {
+        action: 'created',
+        type,
+      };
+    }
+
+    return {
+      action: 'updated',
+      type,
     };
   }
 

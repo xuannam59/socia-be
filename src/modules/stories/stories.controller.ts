@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query } from '@nestjs/common';
 import { StoriesService } from './stories.service';
-import { CreateStoryDto } from './dto/create-story.dto';
+import { CreateStoryDto, CreateStoryLikeDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import type { IRequest } from '@social/types/cores.type';
 import type { IStoryQuery } from '@social/types/stoies.type';
@@ -22,6 +22,11 @@ export class StoriesController {
   @Get(':userId')
   findUserStory(@Param('userId') userId: string, @Req() req: IRequest) {
     return this.storiesService.findUserStory(userId, req.user);
+  }
+
+  @Post('likes/:storyId')
+  actionLike(@Param('storyId') storyId: string, @Body() createStoryLikeDto: CreateStoryLikeDto, @Req() req: IRequest) {
+    return this.storiesService.actionLike(storyId, createStoryLikeDto, req.user);
   }
 
   @Patch(':id')
