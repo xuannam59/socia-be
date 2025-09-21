@@ -47,6 +47,9 @@ export class User {
   @Prop({ type: [String], default: [] })
   following: string[];
 
+  @Prop({ type: [String], default: [] })
+  friends: string[];
+
   @Prop({ type: Date, default: null })
   endStoryAt: Date;
 

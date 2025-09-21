@@ -73,6 +73,17 @@ export class UsersService {
     return existEmail.toObject();
   }
 
+  async findUserInfo(_id: string) {
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+      throw new BadRequestException('Invalid user id');
+    }
+    const user = await this.userModel.findOne({ _id, isBlocked: false }).select('-password -googleId').lean();
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    return user;
+  }
+
   async findOne(_id: string) {
     if (!mongoose.Types.ObjectId.isValid(_id)) {
       throw new BadRequestException('Invalid user id');

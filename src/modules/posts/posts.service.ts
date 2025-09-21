@@ -77,14 +77,21 @@ export class PostsService {
   }
 
   async findAll(query: any, user: IUser) {
-    const { page = 1, limit = 10 } = query;
+    const { page = 1, limit = 10, userId } = query;
     const skip = (page - 1) * limit;
+
+    const filter: any = {};
+    if (userId) {
+      filter.authorId = userId;
+    }
+
     const posts = await this.postModel
-      .find()
+      .find(filter)
       .populate('authorId', 'fullname avatar')
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     // Map qua posts để thêm thông tin like của user hiện tại
     const postsWithLikeStatus = await Promise.all(
@@ -100,7 +107,7 @@ export class PostsService {
         };
 
         return {
-          ...post.toObject(),
+          ...post,
           userLiked: liked,
         };
       }),

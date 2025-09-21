@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req } from '@nestjs/common';
+import { Controller, Post, Body, Req, Get, Param } from '@nestjs/common';
 import { FriendsService } from './friends.service';
 import type { IRequest } from '@social/types/cores.type';
 
@@ -12,7 +12,22 @@ export class FriendsController {
   }
 
   @Post('accept')
-  acceptFriendRequest(@Body('fromUserId') fromUserId: string, @Req() req: IRequest) {
-    return this.friendsService.acceptFriendRequest(fromUserId, req.user);
+  AcceptRequest(@Body('fromUserId') fromUserId: string, @Req() req: IRequest) {
+    return this.friendsService.AcceptRequest(fromUserId, req.user);
+  }
+
+  @Post('reject')
+  rejectFriendRequest(@Body('userId') userId: string, @Req() req: IRequest) {
+    return this.friendsService.rejectRequest(userId, req.user);
+  }
+
+  @Post('unfriend')
+  unfriend(@Body('userId') userId: string, @Req() req: IRequest) {
+    return this.friendsService.unfriend(userId, req.user);
+  }
+
+  @Get(':userId')
+  getFriends(@Param('userId') userId: string, @Req() req: IRequest) {
+    return this.friendsService.getFriends(userId, req.user);
   }
 }

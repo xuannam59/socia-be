@@ -10,6 +10,7 @@ export interface IUser {
   status: string;
   followers: string[];
   following: string[];
+  friends: string[];
   endStoryAt: Date;
   isOnline: boolean;
   isBlocked: boolean;
@@ -31,6 +32,14 @@ export interface IUserResponse {
   fullname: string;
   role: string;
   avatar: string;
+  cover?: string;
+  followers: string[];
+  following: string[];
+  friends: string[];
+  endStoryAt?: Date;
+  isOnline: boolean;
+  isBlocked: boolean;
+  blockedDate: Date;
   phone: string;
   address: string;
   status: string;

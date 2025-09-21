@@ -79,6 +79,12 @@ export class AuthsService {
       phone: user.phone,
       address: user.address,
       status: user.status,
+      followers: user.followers,
+      following: user.following,
+      friends: user.friends,
+      isOnline: user.isOnline,
+      isBlocked: user.isBlocked,
+      blockedDate: user.blockedDate,
       access_token,
     };
     return data;
@@ -184,9 +190,16 @@ export class AuthsService {
       fullname: userInfo.fullname,
       role: userInfo.role,
       avatar: userInfo.avatar,
+      cover: userInfo.cover,
       phone: userInfo.phone,
       address: userInfo.address,
       status: userInfo.status,
+      followers: userInfo.followers,
+      following: userInfo.following,
+      friends: userInfo.friends,
+      isOnline: userInfo.isOnline,
+      isBlocked: userInfo.isBlocked,
+      blockedDate: userInfo.blockedDate,
     };
     return data;
   }
