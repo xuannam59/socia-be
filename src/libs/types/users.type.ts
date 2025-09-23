@@ -45,3 +45,9 @@ export interface IUserResponse {
   status: string;
   access_token?: string;
 }
+
+export interface IFriendListQuery {
+  page: number;
+  limit: number;
+  search: string;
+}

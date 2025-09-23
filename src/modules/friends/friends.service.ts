@@ -48,8 +48,8 @@ export class FriendsService {
         users: [user._id, userIdB],
         status: 'pending',
       }),
-      this.userModel.updateOne({ _id: user._id }, { $push: { following: userIdB } }),
-      this.userModel.updateOne({ _id: userIdB }, { $push: { followers: user._id } }),
+      this.userModel.updateOne({ _id: user._id }, { $addToSet: { following: userIdB } }),
+      this.userModel.updateOne({ _id: userIdB }, { $addToSet: { followers: user._id } }),
     ]);
 
     return friendShip.toObject();
@@ -71,8 +71,8 @@ export class FriendsService {
 
     await Promise.all([
       this.friendShipModel.updateOne({ _id: friendShip._id }, { status: 'accepted' }),
-      this.userModel.updateOne({ _id: user._id }, { $push: { friends: fromUserId, following: user._id } }),
-      this.userModel.updateOne({ _id: fromUserId }, { $push: { friends: user._id, followers: user._id } }),
+      this.userModel.updateOne({ _id: user._id }, { $addToSet: { friends: fromUserId, following: fromUserId } }),
+      this.userModel.updateOne({ _id: fromUserId }, { $addToSet: { friends: user._id, followers: user._id } }),
     ]);
 
     return {
@@ -87,14 +87,23 @@ export class FriendsService {
 
     const [existUser, friendShip] = await Promise.all([
       this.userModel.exists({ _id: userIdB }).lean(),
-      this.friendShipModel.findOne({ users: { $all: [userIdB, user._id] } }).lean(),
+      this.friendShipModel.findOne({ users: { $all: [userIdB, user._id] }, status: 'pending' }).lean(),
     ]);
 
     if (!existUser || !friendShip) {
       throw new BadRequestException('User or friend request not found');
     }
+    const promises: Promise<any>[] = [this.friendShipModel.deleteOne({ _id: friendShip._id })];
 
-    await this.friendShipModel.deleteOne({ _id: friendShip._id });
+    if (user._id === friendShip.fromUserId) {
+      promises.push(this.userModel.updateOne({ _id: user._id }, { $pull: { following: userIdB } }));
+      promises.push(this.userModel.updateOne({ _id: userIdB }, { $pull: { followers: user._id } }));
+    } else {
+      promises.push(this.userModel.updateOne({ _id: user._id }, { $pull: { followers: userIdB } }));
+      promises.push(this.userModel.updateOne({ _id: userIdB }, { $pull: { following: user._id } }));
+    }
+
+    await Promise.all(promises);
 
     return 'delete friend request successfully';
   }
@@ -115,14 +124,20 @@ export class FriendsService {
 
     await Promise.all([
       this.friendShipModel.deleteOne({ _id: friendShip._id }),
-      this.userModel.updateOne({ _id: user._id }, { $pull: { friends: userIdB, following: userIdB } }),
-      this.userModel.updateOne({ _id: userIdB }, { $pull: { friends: user._id, followers: user._id } }),
+      this.userModel.updateOne(
+        { _id: user._id },
+        { $pull: { friends: userIdB, following: userIdB, followers: userIdB } },
+      ),
+      this.userModel.updateOne(
+        { _id: userIdB },
+        { $pull: { friends: user._id, following: user._id, followers: user._id } },
+      ),
     ]);
 
     return 'unfriend successfully';
   }
 
-  async getFriends(userIdB: string, user: IUser) {
+  async getFriendStatus(userIdB: string, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(userIdB)) {
       throw new BadRequestException('Invalid user ID');
     }
@@ -137,5 +152,10 @@ export class FriendsService {
     }
 
     return friendShip;
+  }
+
+  async getFriendList(_user: IUser) {
+    void _user;
+    return 'get friend list successfully';
   }
 }

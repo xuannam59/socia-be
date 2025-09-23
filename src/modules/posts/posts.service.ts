@@ -87,7 +87,8 @@ export class PostsService {
 
     const posts = await this.postModel
       .find(filter)
-      .populate('authorId', 'fullname avatar')
+      .populate({ path: 'authorId', select: 'fullname avatar' })
+      .populate({ path: 'userTags', select: 'fullname avatar' })
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })

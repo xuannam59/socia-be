@@ -7,6 +7,7 @@ import mongoose, { Model } from 'mongoose';
 import { RegisterDto } from './dto/register-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
 import { convertSlug } from '@social/utils/common';
+import { IFriendListQuery, IUser } from '@social/types/users.type';
 
 @Injectable()
 export class UsersService {
@@ -53,7 +54,7 @@ export class UsersService {
   }
 
   async findOrCreateGoogleUser(googleUser: IGoogleUser) {
-    const { email, googleId, fullname, avatar } = googleUser;
+    const { email, googleId, fullname } = googleUser;
     const existEmail = await this.userModel.findOne({ email });
     if (!existEmail) {
       const hashedPassword = hashPassword(generateRandom(12));
@@ -61,7 +62,6 @@ export class UsersService {
         fullname,
         email,
         password: hashedPassword,
-        avatar,
         googleId,
         slug: convertSlug(fullname),
       });
@@ -98,5 +98,24 @@ export class UsersService {
       throw new BadRequestException('User not found');
     }
     return user.toObject();
+  }
+
+  async fetchUserFriendList(user: IUser, query: IFriendListQuery) {
+    const { page, limit, search } = query;
+    const pageNumber = page ? Number(page) : 1;
+    const limitNumber = limit ? Number(limit) : 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const filter: any = {
+      _id: { $in: user.friends },
+    };
+
+    if (search) {
+      filter.slug = new RegExp(search, 'i');
+    }
+
+    const friends = await this.userModel.find(filter).skip(skip).limit(limitNumber).lean();
+
+    return { friends: friends, total: user.friends.length };
   }
 }

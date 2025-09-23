@@ -26,8 +26,13 @@ export class FriendsController {
     return this.friendsService.unfriend(userId, req.user);
   }
 
+  @Get()
+  getFriendList(@Req() req: IRequest) {
+    return this.friendsService.getFriendList(req.user);
+  }
+
   @Get(':userId')
-  getFriends(@Param('userId') userId: string, @Req() req: IRequest) {
-    return this.friendsService.getFriends(userId, req.user);
+  getFriendStatus(@Param('userId') userId: string, @Req() req: IRequest) {
+    return this.friendsService.getFriendStatus(userId, req.user);
   }
 }

@@ -27,11 +27,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     done: VerifyCallback,
   ): Promise<any> {
     try {
-      const { emails, photos, id, displayName } = profile;
+      const { emails, photos, id, name } = profile;
       const payload: IGoogleUser = {
         googleId: id,
         email: emails?.[0]?.value || '',
-        fullname: displayName || '',
+        fullname: name ? name.familyName + ' ' + name.givenName : '',
         avatar: photos?.[0]?.value || '',
       };
       const validateUser = await this.authsService.validateGoogleUser(payload);
