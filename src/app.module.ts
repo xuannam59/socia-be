@@ -12,6 +12,9 @@ import { UploadsModule } from './modules/uploads/uploads.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { StoriesModule } from './modules/stories/stories.module';
+import { ConversationsModule } from './modules/conversations/conversations.module';
+import { MessagesModule } from './modules/messages/messages.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -29,6 +32,9 @@ import { StoriesModule } from './modules/stories/stories.module';
     PostsModule,
     CommentsModule,
     StoriesModule,
+    ConversationsModule,
+    MessagesModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [],
