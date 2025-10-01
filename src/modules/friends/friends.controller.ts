@@ -31,6 +31,11 @@ export class FriendsController {
     return this.friendsService.getFriendList(req.user);
   }
 
+  @Get('invite')
+  inviteFriend(@Req() req: IRequest) {
+    return this.friendsService.inviteFriend(req.user);
+  }
+
   @Get(':userId')
   getFriendStatus(@Param('userId') userId: string, @Req() req: IRequest) {
     return this.friendsService.getFriendStatus(userId, req.user);

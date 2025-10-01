@@ -14,14 +14,22 @@ export class Conversation {
   @Prop({ type: String, default: null })
   avatar: string;
 
-  @Prop({ type: [String], ref: 'User', required: true })
-  participants: string[];
-
-  @Prop({ type: [Object], default: [] })
-  participantStates: {
+  @Prop({
+    type: [
+      {
+        user: { type: String, ref: 'User', required: true },
+        lastReadAt: { type: Date, default: null },
+      },
+    ],
+    required: true,
+  })
+  usersState: {
     user: string;
     lastReadAt: Date;
   }[];
+
+  @Prop({ type: [String], default: [] })
+  users: string[];
 
   @Prop({ type: [String], ref: 'User', default: [] })
   admins: string[];
@@ -35,5 +43,5 @@ export class Conversation {
 
 export const ConversationSchema = SchemaFactory.createForClass(Conversation);
 
-ConversationSchema.index({ participants: 1, isGroup: 1 });
-ConversationSchema.index({ lastMessageAt: -1 });
+ConversationSchema.index({ users: 1, isGroup: 1 });
+ConversationSchema.index({ users: 1, lastMessageAt: -1 });

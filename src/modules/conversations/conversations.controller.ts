@@ -17,6 +17,11 @@ export class ConversationsController {
     return this.conversationsService.findAll();
   }
 
+  @Post('id-or-create')
+  getIdOrCreate(@Body() userIds: string[]) {
+    return this.conversationsService.getIdOrCreate(userIds);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.conversationsService.findOne(+id);

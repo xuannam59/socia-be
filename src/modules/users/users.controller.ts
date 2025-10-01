@@ -12,6 +12,11 @@ export class UsersController {
     return this.usersService.fetchUserFriendList(req.user, query);
   }
 
+  @Get('conversation-friend-list')
+  getConversationFriendList(@Req() req: IRequest) {
+    return this.usersService.getConversationFriendList(req.user);
+  }
+
   @Get(':id')
   findUserInfo(@Param('id') id: string) {
     return this.usersService.findUserInfo(id);

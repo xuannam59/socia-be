@@ -18,7 +18,7 @@ export class Message {
   @Prop({ type: String, default: '' })
   content: string;
 
-  @Prop({ type: Boolean, default: false, index: true })
+  @Prop({ type: Boolean, default: false })
   revoked: boolean;
 
   @Prop({ type: Boolean, default: false })

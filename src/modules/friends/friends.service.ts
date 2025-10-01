@@ -158,4 +158,15 @@ export class FriendsService {
     void _user;
     return 'get friend list successfully';
   }
+
+  async inviteFriend(user: IUser) {
+    const invitedUsers = await this.friendShipModel
+      .find({ toUserId: user._id, status: 'pending' })
+      .populate('fromUserId', 'fullname avatar')
+      .sort({ createdAt: -1 })
+      .limit(2)
+      .lean();
+
+    return invitedUsers;
+  }
 }

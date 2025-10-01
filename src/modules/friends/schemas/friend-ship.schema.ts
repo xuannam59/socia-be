@@ -5,13 +5,13 @@ export type FriendShipDocument = HydratedDocument<FriendShip>;
 
 @Schema({ timestamps: true })
 export class FriendShip {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: String, ref: 'User', required: true })
   fromUserId: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: String, ref: 'User', required: true })
   toUserId: string;
 
-  @Prop({ type: [Types.ObjectId], ref: 'User', required: true })
+  @Prop({ type: [String], ref: 'User', required: true })
   users: string[];
 
   @Prop({ required: true, default: 'pending', enum: ['pending', 'accepted'] })

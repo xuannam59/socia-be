@@ -8,10 +8,14 @@ import { RegisterDto } from './dto/register-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
 import { convertSlug } from '@social/utils/common';
 import { IFriendListQuery, IUser } from '@social/types/users.type';
+import { Conversation, ConversationDocument } from '../conversations/schemas/conversation.schema';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Conversation.name) private conversationModel: Model<ConversationDocument>,
+  ) {}
 
   async register(registerDto: RegisterDto) {
     const { fullname, email, password, confirmPassword } = registerDto;
@@ -114,8 +118,45 @@ export class UsersService {
       filter.slug = new RegExp(search, 'i');
     }
 
-    const friends = await this.userModel.find(filter).skip(skip).limit(limitNumber).lean();
-
+    const friends = await this.userModel
+      .find(filter)
+      .skip(skip)
+      .limit(limitNumber)
+      .select('-password -googleId')
+      .lean();
     return { friends: friends, total: user.friends.length };
+  }
+
+  async getConversationFriendList(user: IUser) {
+    const filter: any = {
+      _id: { $in: user.friends },
+    };
+
+    const friends = await this.userModel
+      .find(filter)
+      .limit(10)
+      .select('_id fullname avatar isOnline lastActive createdAt')
+      .lean();
+
+    const conversationList = await Promise.all(
+      friends.map(async friend => {
+        const conversation = await this.conversationModel
+          .findOne({
+            users: {
+              $all: [user._id, friend._id],
+            },
+          })
+          .select('_id')
+          .lean();
+
+        return {
+          ...friend,
+          conversationId: conversation ? conversation._id : null,
+          isGroup: conversation ? conversation.isGroup : false,
+          isExist: conversation ? true : false,
+        };
+      }),
+    );
+    return conversationList;
   }
 }
