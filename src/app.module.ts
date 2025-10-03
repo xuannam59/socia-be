@@ -15,6 +15,7 @@ import { StoriesModule } from './modules/stories/stories.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { SocketIoModule } from './modules/socket-io/socket-io.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     ConversationsModule,
     MessagesModule,
     NotificationsModule,
+    SocketIoModule,
   ],
   controllers: [AppController],
   providers: [],

@@ -62,7 +62,7 @@ export class User {
   @Prop({ type: Date, default: null })
   blockedDate: Date;
 
-  @Prop({ type: Date, default: null })
+  @Prop({ type: Date, default: new Date() })
   lastActive: Date;
 
   @Prop({ type: String })

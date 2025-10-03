@@ -28,5 +28,6 @@ import { GoogleStrategy } from '@social/authentication/google.strategy';
   ],
   controllers: [AuthsController],
   providers: [AuthsService, LocalStrategy, JwtStrategy, GoogleStrategy],
+  exports: [AuthsService],
 })
 export class AuthsModule {}

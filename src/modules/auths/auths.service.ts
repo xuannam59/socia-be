@@ -240,4 +240,15 @@ export class AuthsService {
       message: 'Logout successfully',
     };
   }
+
+  handleVerifyToken(token: string) {
+    try {
+      const decoded = this.jwtService.verify(token, {
+        secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
+      });
+      return decoded;
+    } catch (error) {
+      throw new UnauthorizedException('Token is invalid!');
+    }
+  }
 }

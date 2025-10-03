@@ -97,7 +97,7 @@ export class UsersService {
         _id,
         isBlocked: false,
       })
-      .select('-password');
+      .select('-password -googleId');
     if (!user) {
       throw new BadRequestException('User not found');
     }
@@ -158,5 +158,12 @@ export class UsersService {
       }),
     );
     return conversationList;
+  }
+
+  async updateUserOnlineStatus(userId: string, isOnline: boolean) {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid user id');
+    }
+    await this.userModel.updateOne({ _id: userId }, { isOnline, lastActive: new Date() });
   }
 }
