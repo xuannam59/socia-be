@@ -11,7 +11,6 @@ export class ConversationsService {
 
   create(createConversationDto: CreateConversationDto) {
     const { userIds, name, avatar, isGroup } = createConversationDto;
-
     return 'This action adds a new conversation';
   }
 

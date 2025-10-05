@@ -1,26 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { Message } from './schemas/message.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import mongoose, { Model } from 'mongoose';
 
 @Injectable()
 export class MessagesService {
-  create(createMessageDto: CreateMessageDto) {
-    return 'This action adds a new message';
-  }
+  constructor(@InjectModel(Message.name) private messageModel: Model<Message>) {}
 
-  findAll() {
-    return `This action returns all messages`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} message`;
-  }
-
-  update(id: number, updateMessageDto: UpdateMessageDto) {
-    return `This action updates a #${id} message`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} message`;
+  async fetchMessagesByConversationId(conversationId: string) {
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      throw new BadRequestException('Conversation ID is invalid');
+    }
+    return this.messageModel
+      .find({ conversationId })
+      .sort({ createdAt: -1 })
+      .populate('sender', 'fullname avatar')
+      .lean();
   }
 }
