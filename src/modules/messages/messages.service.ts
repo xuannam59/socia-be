@@ -15,6 +15,7 @@ export class MessagesService {
       .find({ conversationId })
       .sort({ createdAt: -1 })
       .populate('sender', 'fullname avatar')
+      .limit(15)
       .lean();
   }
 }

@@ -14,7 +14,7 @@ import { CONVERSATION_MESSAGE } from '@social/utils/socket';
 import { CHAT_MESSAGE } from '@social/utils/socket';
 import { IUser } from '@social/types/users.type';
 import { SOCKET_CONFIG } from '@social/utils/socket';
-import type { ISendMessage } from '@social/types/messages.type';
+import type { IMessageTyping, ISendMessage } from '@social/types/messages.type';
 
 @WebSocketGateway(SOCKET_CONFIG)
 export class SocketIoGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -88,7 +88,7 @@ export class SocketIoGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   @SubscribeMessage(CHAT_MESSAGE.TYPING)
-  async handleTyping(@ConnectedSocket() client: Socket, @MessageBody() payload: any) {
+  async handleTyping(@ConnectedSocket() client: Socket, @MessageBody() payload: IMessageTyping) {
     return this.messageSocketService.typing(client, payload);
   }
 }

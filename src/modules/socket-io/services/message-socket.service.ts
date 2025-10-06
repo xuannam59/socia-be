@@ -4,7 +4,7 @@ import { Message } from 'src/modules/messages/schemas/message.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Notification } from 'src/modules/notifications/schemas/notification.schema';
-import { ISendMessage } from '@social/types/messages.type';
+import { IMessageTyping, ISendMessage } from '@social/types/messages.type';
 import { Conversation } from 'src/modules/conversations/schemas/conversation.schema';
 import { CHAT_MESSAGE } from '@social/utils/socket';
 
@@ -42,7 +42,7 @@ export class MessageSocketService {
         { _id: conversationId },
         { lastMessage: newMessage._id, lastMessageAt: new Date() },
       );
-      server.to(conversationId).emit(CHAT_MESSAGE.RECEIVE, {
+      server.to(conversationId).emit(CHAT_MESSAGE.SEND, {
         ...newMessage.toObject(),
         sender: {
           _id: newMessage.sender,
@@ -65,9 +65,18 @@ export class MessageSocketService {
     }
   }
 
-  async typing(client: Socket, payload: any) {
+  async typing(client: Socket, payload: IMessageTyping) {
     try {
-      const { conversationId, sender, type, content, mentions, userLiked, status } = payload;
+      const { conversationId, sender, status } = payload;
+      const existingConversation = await this.conversationModel.findOne({ _id: conversationId });
+      if (!existingConversation) {
+        return;
+      }
+      client.to(conversationId).emit(CHAT_MESSAGE.TYPING, {
+        conversationId,
+        sender,
+        status,
+      });
     } catch (error) {
       console.log('typing error', error);
     }
