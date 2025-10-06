@@ -88,7 +88,7 @@ export class SocketIoGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   @SubscribeMessage(CHAT_MESSAGE.TYPING)
-  async handleTyping(@ConnectedSocket() client: Socket, @MessageBody() payload: IMessageTyping) {
-    return this.messageSocketService.typing(client, payload);
+  async handleTyping(@MessageBody() payload: IMessageTyping) {
+    return this.messageSocketService.messageTyping(this.server, payload);
   }
 }

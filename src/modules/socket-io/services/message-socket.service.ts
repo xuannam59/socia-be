@@ -65,14 +65,14 @@ export class MessageSocketService {
     }
   }
 
-  async typing(client: Socket, payload: IMessageTyping) {
+  async messageTyping(server: Server, payload: IMessageTyping) {
     try {
       const { conversationId, sender, status } = payload;
       const existingConversation = await this.conversationModel.findOne({ _id: conversationId });
       if (!existingConversation) {
         return;
       }
-      client.to(conversationId).emit(CHAT_MESSAGE.TYPING, {
+      server.to(conversationId).emit(CHAT_MESSAGE.TYPING, {
         conversationId,
         sender,
         status,
