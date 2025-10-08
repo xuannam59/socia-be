@@ -24,6 +24,9 @@ export class Message {
   @Prop({ type: Boolean, default: false })
   edited: boolean;
 
+  @Prop({ type: Date, default: null })
+  timeEdited: Date;
+
   @Prop({ type: [Object], default: [] })
   userLikes: {
     userId: string;

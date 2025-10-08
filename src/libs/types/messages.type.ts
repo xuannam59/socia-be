@@ -46,3 +46,11 @@ export interface IMessageTyping {
   sender: { _id: string; fullname: string; avatar: string };
   status: 'typing' | 'stop_typing';
 }
+
+export interface IMessageReaction {
+  conversationId: string;
+  messageId: string;
+  userId: string;
+  type: number;
+  isLike: boolean;
+}
