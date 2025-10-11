@@ -13,7 +13,7 @@ export class MessagesService {
     }
 
     const pageNumber = query.page ? Number(query.page) : 1;
-    const limitNumber = 10;
+    const limitNumber = 15;
     const skip = (pageNumber - 1) * limitNumber;
 
     const [result, total] = await Promise.all([
@@ -21,6 +21,14 @@ export class MessagesService {
         .find({ conversationId })
         .sort({ createdAt: -1 })
         .populate('sender', 'fullname avatar')
+        .populate({
+          path: 'parentId',
+          select: 'content type',
+          populate: {
+            path: 'sender',
+            select: 'fullname',
+          },
+        })
         .limit(limitNumber)
         .skip(skip)
         .lean(),

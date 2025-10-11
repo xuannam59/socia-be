@@ -6,6 +6,9 @@ export type MessageDocument = HydratedDocument<Message>;
 
 @Schema({ timestamps: true })
 export class Message {
+  @Prop({ type: String, ref: 'Message', default: null })
+  parentId: string;
+
   @Prop({ type: String, ref: 'Conversation', required: true, index: true })
   conversationId: string;
 

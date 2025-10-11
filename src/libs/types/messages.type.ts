@@ -23,6 +23,12 @@ export interface IMessage {
 
 export interface ISendMessage {
   _id: string;
+  parentId: {
+    _id: string;
+    content: string;
+    type: string;
+    sender: { _id: string; fullname: string; avatar: string };
+  };
   sender: { _id: string; fullname: string; avatar: string };
   type: string;
   conversationId: string;

@@ -17,7 +17,7 @@ export class MessageSocketService {
   ) {}
 
   async sendMessage(server: Server, client: Socket, payload: ISendMessage) {
-    const { _id: tempId, conversationId, sender, type, content, mentions, userLiked, status } = payload;
+    const { _id: tempId, conversationId, sender, type, content, mentions, userLiked, parentId } = payload;
     try {
       const existingConversation = await this.conversationModel.findOne({ _id: conversationId });
       if (!existingConversation) {
@@ -39,6 +39,7 @@ export class MessageSocketService {
         content,
         mentions,
         userLiked,
+        parentId: parentId ? parentId._id : null,
         timeEdited: new Date(now.getTime() + 15 * 60 * 1000),
       });
       await this.conversationModel.updateOne(
@@ -47,6 +48,7 @@ export class MessageSocketService {
       );
       server.to(conversationId).emit(CHAT_MESSAGE.SEND, {
         ...newMessage.toObject(),
+        parentId: parentId,
         sender: {
           _id: newMessage.sender,
           fullname: sender.fullname,
