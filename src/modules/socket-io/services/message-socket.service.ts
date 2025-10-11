@@ -4,7 +4,7 @@ import { Message } from 'src/modules/messages/schemas/message.schema';
 import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Notification } from 'src/modules/notifications/schemas/notification.schema';
-import { IMessageReaction, IMessageTyping, ISendMessage } from '@social/types/messages.type';
+import { IMessageEdit, IMessageReaction, IMessageTyping, ISendMessage } from '@social/types/messages.type';
 import { Conversation } from 'src/modules/conversations/schemas/conversation.schema';
 import { CHAT_MESSAGE } from '@social/utils/socket';
 
@@ -30,7 +30,6 @@ export class MessageSocketService {
         });
         return;
       }
-
       const now = new Date();
       const newMessage = await this.messageModel.create({
         conversationId,
@@ -132,6 +131,35 @@ export class MessageSocketService {
         message: 'Reaction failed',
       });
       return;
+    }
+  }
+
+  async messageEdit(server: Server, payload: IMessageEdit) {
+    const { conversationId, _id, sender, type, content, mentions, timeEdited } = payload;
+    try {
+      const existingMessage = await this.messageModel.findOne({ _id, conversationId });
+      if (!existingMessage) {
+        return;
+      }
+      const now = new Date().getTime();
+      const expireTimeEdit = new Date(timeEdited).getTime() - now;
+      if (expireTimeEdit > 0) {
+        await this.messageModel.updateOne(
+          { _id, conversationId },
+          { $set: { content, edited: true, timeEdited: new Date(now + 15 * 60 * 1000) } },
+        );
+        server.to(conversationId).emit(CHAT_MESSAGE.EDIT, {
+          _id,
+          conversationId,
+          sender,
+          type,
+          content,
+          mentions,
+          timeEdited,
+        });
+      }
+    } catch (error) {
+      console.log('edit message error', error);
     }
   }
 }

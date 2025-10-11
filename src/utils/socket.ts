@@ -13,6 +13,7 @@ export const CONVERSATION_MESSAGE = {
 
 export const CHAT_MESSAGE = {
   SEND: 'chat:send',
+  EDIT: 'chat:edit',
   STATUS_MESSAGE: 'chat:status_message',
   REACTION: 'chat:reaction',
   READ: 'chat:read',

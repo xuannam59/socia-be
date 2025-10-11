@@ -60,3 +60,19 @@ export interface IMessageReaction {
   type: number;
   isLike: boolean;
 }
+
+export interface IMessageEdit {
+  _id: string;
+  sender: { _id: string; fullname: string; avatar: string };
+  type: string;
+  conversationId: string;
+  content: string;
+  mentions: {
+    userId: string;
+    position: {
+      start: number;
+      end: number;
+    };
+  }[];
+  timeEdited: Date;
+}
