@@ -24,6 +24,9 @@ export class Message {
   @Prop({ type: Boolean, default: false })
   revoked: boolean;
 
+  @Prop({ type: String })
+  revokedContent: string;
+
   @Prop({ type: Boolean, default: false })
   edited: boolean;
 

@@ -76,3 +76,10 @@ export interface IMessageEdit {
   }[];
   timeEdited: Date;
 }
+
+export interface IMessageRevoke {
+  conversationId: string;
+  messageId: string;
+  content: string;
+  userId: string;
+}

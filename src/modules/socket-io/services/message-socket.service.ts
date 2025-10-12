@@ -4,7 +4,13 @@ import { Message } from 'src/modules/messages/schemas/message.schema';
 import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Notification } from 'src/modules/notifications/schemas/notification.schema';
-import { IMessageEdit, IMessageReaction, IMessageTyping, ISendMessage } from '@social/types/messages.type';
+import {
+  IMessageEdit,
+  IMessageReaction,
+  IMessageRevoke,
+  IMessageTyping,
+  ISendMessage,
+} from '@social/types/messages.type';
 import { Conversation } from 'src/modules/conversations/schemas/conversation.schema';
 import { CHAT_MESSAGE } from '@social/utils/socket';
 
@@ -143,23 +149,57 @@ export class MessageSocketService {
       }
       const now = new Date().getTime();
       const expireTimeEdit = new Date(timeEdited).getTime() - now;
-      if (expireTimeEdit > 0) {
-        await this.messageModel.updateOne(
-          { _id, conversationId },
-          { $set: { content, edited: true, timeEdited: new Date(now + 15 * 60 * 1000) } },
-        );
-        server.to(conversationId).emit(CHAT_MESSAGE.EDIT, {
-          _id,
-          conversationId,
-          sender,
-          type,
-          content,
-          mentions,
-          timeEdited,
-        });
-      }
+      if (expireTimeEdit <= 0) return;
+      await this.messageModel.updateOne(
+        { _id, conversationId },
+        { $set: { content, edited: true, timeEdited: new Date(now + 15 * 60 * 1000) } },
+      );
+      server.to(conversationId).emit(CHAT_MESSAGE.EDIT, {
+        _id,
+        conversationId,
+        sender,
+        type,
+        content,
+        mentions,
+        timeEdited,
+      });
     } catch (error) {
       console.log('edit message error', error);
+    }
+  }
+
+  async messageRevoke(server: Server, payload: IMessageRevoke) {
+    const { conversationId, messageId, userId, content } = payload;
+    try {
+      const existingMessage = await this.messageModel.findOne({ _id: messageId, conversationId, revoked: false });
+      if (!existingMessage) {
+        server.to(conversationId).emit(CHAT_MESSAGE.STATUS_MESSAGE, {
+          messageId,
+          userId,
+          content,
+          status: 'failed',
+          message: 'Message not found',
+        });
+        return;
+      }
+      await this.messageModel.updateOne(
+        { _id: messageId, conversationId },
+        { $set: { revoked: true, content: '', revokedContent: content } },
+      );
+      server.to(conversationId).emit(CHAT_MESSAGE.REVOKE, {
+        messageId,
+        userId,
+        status: 'success',
+      });
+    } catch (error) {
+      server.to(conversationId).emit(CHAT_MESSAGE.STATUS_MESSAGE, {
+        messageId,
+        userId,
+        content,
+        status: 'failed',
+        message: 'Revoke message failed',
+      });
+      console.log('revoke message error', error);
     }
   }
 }
