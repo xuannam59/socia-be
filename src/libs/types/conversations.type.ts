@@ -6,7 +6,7 @@ export interface IConversation {
   participants: string[];
   participantStates: {
     user: string;
-    lastReadAt: Date;
+    readLastMessage: string;
   }[];
   admins: string[];
   lastMessage: string;

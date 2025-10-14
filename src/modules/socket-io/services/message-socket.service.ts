@@ -47,9 +47,16 @@ export class MessageSocketService {
         parentId: parentId ? parentId._id : null,
         timeEdited: new Date(now.getTime() + 15 * 60 * 1000),
       });
+      const usersState = existingConversation.toObject().usersState.map(user => {
+        if (user.user === sender._id) {
+          return { ...user, readLastMessage: newMessage._id.toString() };
+        } else {
+          return user;
+        }
+      });
       await this.conversationModel.updateOne(
         { _id: conversationId },
-        { lastMessage: newMessage._id, lastMessageAt: new Date() },
+        { lastMessage: newMessage._id, lastMessageAt: new Date(), usersState, seen: [sender._id] },
       );
       server.to(conversationId).emit(CHAT_MESSAGE.SEND, {
         ...newMessage.toObject(),

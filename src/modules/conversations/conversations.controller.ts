@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Req } from '@nestjs/common';
 import { ConversationsService } from './conversations.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
+import type { IRequest } from '@social/types/cores.type';
 
 @Controller('conversations')
 export class ConversationsController {
@@ -12,9 +13,24 @@ export class ConversationsController {
     return this.conversationsService.create(createConversationDto);
   }
 
+  @Post('seen')
+  seen(@Body('conversationIds') conversationIds: string[], @Req() req: IRequest) {
+    return this.conversationsService.updateSeen(conversationIds, req.user);
+  }
+
+  @Post('read-and-seen')
+  readAndSeen(@Body('conversationId') conversationId: string, @Req() req: IRequest) {
+    return this.conversationsService.updateReadAndSeen(conversationId, req.user);
+  }
+
   @Get()
-  findAll() {
-    return this.conversationsService.findAll();
+  findAll(@Query() query: any, @Req() req: IRequest) {
+    return this.conversationsService.findAll(query, req.user);
+  }
+
+  @Get('un-seen')
+  getUnSeenConversations(@Req() req: IRequest) {
+    return this.conversationsService.getUnSeenConversations(req.user);
   }
 
   @Post('id-or-create')

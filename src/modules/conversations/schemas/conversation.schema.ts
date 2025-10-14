@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { User } from '@social/users/schemas/user.schema';
+import { Message } from 'src/modules/messages/schemas/message.schema';
 
 export type ConversationDocument = HydratedDocument<Conversation>;
 
@@ -15,26 +17,24 @@ export class Conversation {
   avatar: string;
 
   @Prop({
-    type: [
-      {
-        user: { type: String, ref: 'User', required: true },
-        lastReadAt: { type: Date, default: null },
-      },
-    ],
+    type: [Object],
     required: true,
   })
   usersState: {
     user: string;
-    lastReadAt: Date;
+    readLastMessage: string;
   }[];
 
-  @Prop({ type: [String], default: [] })
+  @Prop({ type: [String], default: [], ref: User.name })
   users: string[];
 
-  @Prop({ type: [String], ref: 'User', default: [] })
+  @Prop({ type: [String], default: [] })
+  seen: string[];
+
+  @Prop({ type: [String], ref: User.name, default: [] })
   admins: string[];
 
-  @Prop({ type: String, default: null })
+  @Prop({ type: String, default: null, ref: Message.name })
   lastMessage: string;
 
   @Prop({ type: Date, default: null, index: true })
