@@ -42,12 +42,12 @@ export class ConversationsService {
       }
       const users = conversation.users as unknown as IUser[];
       const otherUser = users.find(other => other._id.toString() !== user._id);
-      console.log(user._id);
-      console.log(otherUser);
-      if (!otherUser) {
-        return { ...conversation, isExist: true };
-      }
-      return { ...conversation, name: otherUser.fullname, avatar: otherUser.avatar, isExist: true };
+      return {
+        ...conversation,
+        name: otherUser?.fullname || 'Người dùng',
+        avatar: otherUser?.avatar || '',
+        isExist: true,
+      };
     });
     return {
       list: newConversations,

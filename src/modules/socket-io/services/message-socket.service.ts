@@ -12,7 +12,7 @@ import {
   ISendMessage,
 } from '@social/types/messages.type';
 import { Conversation } from 'src/modules/conversations/schemas/conversation.schema';
-import { CHAT_MESSAGE } from '@social/utils/socket';
+import { CHAT_MESSAGE, HEADER_MESSAGE } from '@social/utils/socket';
 
 @Injectable()
 export class MessageSocketService {
@@ -22,10 +22,13 @@ export class MessageSocketService {
     @InjectModel(Conversation.name) private conversationModel: Model<Conversation>,
   ) {}
 
-  async sendMessage(server: Server, client: Socket, payload: ISendMessage) {
+  async sendMessage(server: Server, payload: ISendMessage) {
     const { _id: tempId, conversationId, sender, type, content, mentions, userLiked, parentId } = payload;
     try {
-      const existingConversation = await this.conversationModel.findOne({ _id: conversationId });
+      const existingConversation = await this.conversationModel
+        .findOne({ _id: conversationId })
+        .populate('users', 'fullname avatar isOnline lastActive')
+        .lean();
       if (!existingConversation) {
         server.to(conversationId).emit(CHAT_MESSAGE.STATUS_MESSAGE, {
           tempId,
@@ -47,7 +50,7 @@ export class MessageSocketService {
         parentId: parentId ? parentId._id : null,
         timeEdited: new Date(now.getTime() + 15 * 60 * 1000),
       });
-      const usersState = existingConversation.toObject().usersState.map(user => {
+      const usersState = existingConversation.usersState.map(user => {
         if (user.user === sender._id) {
           return { ...user, readLastMessage: newMessage._id.toString() };
         } else {
@@ -58,6 +61,22 @@ export class MessageSocketService {
         { _id: conversationId },
         { lastMessage: newMessage._id, lastMessageAt: new Date(), usersState, seen: [sender._id] },
       );
+
+      const users = existingConversation.users.map((user: any) => user._id.toString());
+      server.to(users).emit(HEADER_MESSAGE.UN_SEEN_CONVERSATION, {
+        conversation: {
+          ...existingConversation,
+          usersState,
+          lastMessage: {
+            type,
+            content,
+            sender: sender._id,
+          },
+          lastMessageAt: new Date(),
+          isExist: true,
+        },
+        senderId: sender._id,
+      });
       server.to(conversationId).emit(CHAT_MESSAGE.SEND, {
         ...newMessage.toObject(),
         parentId: parentId,

@@ -90,7 +90,7 @@ export class SocketIoGateway implements OnGatewayConnection, OnGatewayDisconnect
     //     return user;
     //   }
     // });
-    return this.messageSocketService.sendMessage(this.server, client, payload);
+    return this.messageSocketService.sendMessage(this.server, payload);
   }
 
   @SubscribeMessage(CHAT_MESSAGE.TYPING)

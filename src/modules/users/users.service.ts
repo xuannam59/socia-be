@@ -136,6 +136,7 @@ export class UsersService {
       .find(filter)
       .limit(10)
       .select('_id fullname avatar isOnline lastActive createdAt')
+      .sort({ lastActive: -1 })
       .lean();
 
     const conversationList = await Promise.all(

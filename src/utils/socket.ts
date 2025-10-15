@@ -21,3 +21,7 @@ export const CHAT_MESSAGE = {
   TYPING: 'chat:typing',
   STOP_TYPING: 'chat:stop_typing',
 };
+
+export const HEADER_MESSAGE = {
+  UN_SEEN_CONVERSATION: 'header:un_seen_conversation',
+};
