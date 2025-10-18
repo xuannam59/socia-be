@@ -17,6 +17,7 @@ import { SOCKET_CONFIG } from '@social/utils/socket';
 import type {
   IMessageEdit,
   IMessageReaction,
+  IMessageReadByUser,
   IMessageRevoke,
   IMessageTyping,
   ISendMessage,
@@ -111,5 +112,10 @@ export class SocketIoGateway implements OnGatewayConnection, OnGatewayDisconnect
   @SubscribeMessage(CHAT_MESSAGE.REVOKE)
   async handleRevokeMessage(@MessageBody() payload: IMessageRevoke) {
     return this.messageSocketService.messageRevoke(this.server, payload);
+  }
+
+  @SubscribeMessage(CHAT_MESSAGE.READ)
+  async handleReadMessage(@MessageBody() payload: IMessageReadByUser) {
+    return this.messageSocketService.messageRead(this.server, payload);
   }
 }

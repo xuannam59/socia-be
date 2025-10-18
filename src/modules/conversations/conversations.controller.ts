@@ -18,9 +18,9 @@ export class ConversationsController {
     return this.conversationsService.updateSeen(conversationIds, req.user);
   }
 
-  @Post('read-and-seen')
+  @Patch('read')
   readAndSeen(@Body('conversationId') conversationId: string, @Req() req: IRequest) {
-    return this.conversationsService.updateReadAndSeen(conversationId, req.user);
+    return this.conversationsService.readConversation(conversationId, req.user);
   }
 
   @Get()

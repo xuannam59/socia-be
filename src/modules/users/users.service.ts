@@ -135,8 +135,8 @@ export class UsersService {
     const friends = await this.userModel
       .find(filter)
       .limit(10)
-      .select('_id fullname avatar isOnline lastActive createdAt')
-      .sort({ lastActive: -1 })
+      .select('_id fullname avatar isOnline lastActive')
+      .sort({ isOnline: -1 })
       .lean();
 
     const conversationList = await Promise.all(
@@ -147,14 +147,17 @@ export class UsersService {
               $all: [user._id, friend._id],
             },
           })
-          .select('_id')
+          .select('_id usersState lastMessage')
+          .populate('lastMessage', 'content type sender')
           .lean();
 
         return {
           ...friend,
           conversationId: conversation ? conversation._id : null,
-          isGroup: conversation ? conversation.isGroup : false,
+          isGroup: false,
           isExist: conversation ? true : false,
+          usersState: conversation ? conversation.usersState : [],
+          lastMessage: conversation ? conversation.lastMessage : '',
         };
       }),
     );

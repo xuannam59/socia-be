@@ -94,7 +94,7 @@ export class ConversationsService {
     return 'update seen success';
   }
 
-  async updateReadAndSeen(conversationId: string, user: IUser) {
+  async readConversation(conversationId: string, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(conversationId)) {
       throw new BadRequestException('Invalid conversation id');
     }
@@ -102,12 +102,15 @@ export class ConversationsService {
     if (!existingConversation) {
       throw new BadRequestException('Conversation not found');
     }
-
+    const usersState = existingConversation.usersState.find(state => state.user === user._id);
+    if (!usersState || usersState.readLastMessage === existingConversation.lastMessage) {
+      return 'conversation already read';
+    }
     await this.conversationModel.updateOne(
-      { _id: conversationId, 'usersState.user': user._id },
-      { $set: { 'usersState.$.readLastMessage': existingConversation.lastMessage }, $addToSet: { seen: user._id } },
+      { _id: existingConversation._id, 'usersState.user': user._id },
+      { $addToSet: { seen: user._id }, $set: { 'usersState.$.readLastMessage': existingConversation.lastMessage } },
     );
-    return 'update read success';
+    return 'update seen success';
   }
 
   findOne(id: number) {

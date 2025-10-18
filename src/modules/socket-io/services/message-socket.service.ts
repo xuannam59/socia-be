@@ -7,6 +7,7 @@ import { Notification } from 'src/modules/notifications/schemas/notification.sch
 import {
   IMessageEdit,
   IMessageReaction,
+  IMessageReadByUser,
   IMessageRevoke,
   IMessageTyping,
   ISendMessage,
@@ -30,7 +31,7 @@ export class MessageSocketService {
         .populate('users', 'fullname avatar isOnline lastActive')
         .lean();
       if (!existingConversation) {
-        server.to(conversationId).emit(CHAT_MESSAGE.STATUS_MESSAGE, {
+        server.to(conversationId).emit(CHAT_MESSAGE.SEND, {
           tempId,
           conversationId,
           senderId: sender._id,
@@ -68,6 +69,7 @@ export class MessageSocketService {
           ...existingConversation,
           usersState,
           lastMessage: {
+            _id: newMessage._id,
             type,
             content,
             sender: sender._id,
@@ -86,10 +88,11 @@ export class MessageSocketService {
           avatar: sender.avatar,
         },
         status: 'success',
+        message: 'Message sent successfully',
         tempId,
       });
     } catch (error) {
-      server.to(conversationId).emit(CHAT_MESSAGE.STATUS_MESSAGE, {
+      server.to(conversationId).emit(CHAT_MESSAGE.SEND, {
         tempId,
         conversationId,
         senderId: sender._id,
@@ -154,7 +157,7 @@ export class MessageSocketService {
       });
     } catch (error) {
       console.log('reaction error', error);
-      server.to(conversationId).emit(CHAT_MESSAGE.STATUS_MESSAGE, {
+      server.to(conversationId).emit(CHAT_MESSAGE.REACTION, {
         messageId,
         userId,
         type,
@@ -199,7 +202,7 @@ export class MessageSocketService {
     try {
       const existingMessage = await this.messageModel.findOne({ _id: messageId, conversationId, revoked: false });
       if (!existingMessage) {
-        server.to(conversationId).emit(CHAT_MESSAGE.STATUS_MESSAGE, {
+        server.to(conversationId).emit(CHAT_MESSAGE.REVOKE, {
           messageId,
           userId,
           content,
@@ -218,7 +221,7 @@ export class MessageSocketService {
         status: 'success',
       });
     } catch (error) {
-      server.to(conversationId).emit(CHAT_MESSAGE.STATUS_MESSAGE, {
+      server.to(conversationId).emit(CHAT_MESSAGE.REVOKE, {
         messageId,
         userId,
         content,
@@ -226,6 +229,33 @@ export class MessageSocketService {
         message: 'Revoke message failed',
       });
       console.log('revoke message error', error);
+    }
+  }
+
+  async messageRead(server: Server, payload: IMessageReadByUser) {
+    const { conversationId, userId } = payload;
+    try {
+      const existingConversation = await this.conversationModel.findOne({ _id: conversationId });
+      if (!existingConversation) {
+        return;
+      }
+      const lastMessageId = existingConversation.lastMessage;
+      const userState = existingConversation.usersState.find(state => state.user === userId);
+      if (!userState || userState.readLastMessage === lastMessageId) {
+        return;
+      }
+      await this.conversationModel.updateOne(
+        { _id: conversationId, 'usersState.user': userId },
+        { $set: { 'usersState.$.readLastMessage': lastMessageId }, $addToSet: { seen: userId } },
+      );
+      server.to(conversationId).emit(CHAT_MESSAGE.READ, {
+        conversationId,
+        userId,
+        lastMessageId,
+      });
+    } catch (error) {
+      console.log('read message error', error);
+      return;
     }
   }
 }

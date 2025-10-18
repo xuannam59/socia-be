@@ -83,3 +83,9 @@ export interface IMessageRevoke {
   content: string;
   userId: string;
 }
+
+export interface IMessageReadByUser {
+  conversationId: string;
+  userId: string;
+  lastMessageId: string;
+}
