@@ -1,62 +1,50 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
+import { User } from '@social/users/schemas/user.schema';
+import { EEntityType, ENotificationType } from '@social/types/notifications.type';
 
 export type NotificationDocument = HydratedDocument<Notification>;
 
 @Schema({ timestamps: true })
 export class Notification {
-  // Recipient of the notification
-  @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
-  userId: Types.ObjectId;
+  @Prop({ required: true, type: String, ref: User.name })
+  senderId: string;
 
-  // The actor who triggered the notification (may be null for system notifications)
-  @Prop({ type: Types.ObjectId, ref: 'User' })
-  actorId?: Types.ObjectId;
+  @Prop({ type: String, required: true })
+  receiverId: string;
 
-  // What entity this notification is about
   @Prop({
     type: String,
-    enum: ['post', 'comment', 'story', 'message', 'conversation', 'friend', 'system'],
+    enum: ENotificationType,
     required: true,
   })
-  type: string;
+  type: ENotificationType;
 
-  // Reference to the target entity (generic id, varies by type)
-  @Prop({ type: Types.ObjectId })
-  resourceId?: Types.ObjectId;
+  @Prop({
+    type: String,
+    enum: EEntityType,
+    required: true,
+  })
+  entityType: EEntityType;
 
-  // Optional display information
   @Prop({ type: String })
-  title?: string;
+  entityId: string;
 
   @Prop({ type: String })
-  content?: string;
+  message: string;
 
-  // Optional link to navigate the client to a screen
-  @Prop({ type: String })
-  link?: string;
+  @Prop({ type: Boolean, default: false })
+  seen: boolean;
 
-  // Read/seen state
   @Prop({ type: Boolean, default: false })
   isRead: boolean;
 
-  @Prop({ type: Date })
-  readAt?: Date;
-
-  // Priority for client-side ordering or badges
-  @Prop({ type: String, enum: ['low', 'normal', 'high'], default: 'normal' })
-  priority: string;
-
-  // Arbitrary metadata for flexible use-cases
-  @Prop({ type: Object, default: {} })
-  metadata: Record<string, any>;
-
-  // Optional expiration time; if set, a TTL index will remove the document at this time
   @Prop({ type: Date })
   expiresAt?: Date;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);
 
-// TTL index that only applies when expiresAt is set (MongoDB ignores docs where field is missing)
 NotificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+NotificationSchema.index({ receiverId: 1, type: 1, entityId: 1, createdAt: -1 });
+NotificationSchema.index({ receiverId: 1, isRead: 1, type: 1, entityId: 1, createdAt: -1 });

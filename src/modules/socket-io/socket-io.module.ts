@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Message, MessageSchema } from '../messages/schemas/message.schema';
 import { Notification, NotificationSchema } from '../notifications/schemas/notification.schema';
 import { Conversation, ConversationSchema } from '../conversations/schemas/conversation.schema';
+import { NotificationsSocketModule } from './notifications/notifications-socket.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { Conversation, ConversationSchema } from '../conversations/schemas/conve
     ]),
     AuthsModule,
     UsersModule,
+    NotificationsSocketModule,
   ],
   providers: [SocketIoGateway, MessageSocketService],
 })
