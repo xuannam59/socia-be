@@ -122,7 +122,11 @@ export class PostsService {
       throw new BadRequestException('Invalid post id');
     }
     const [post, userLike] = await Promise.all([
-      this.postModel.findOne({ _id: id }).populate({ path: 'userTags', select: 'fullname avatar' }).lean(),
+      this.postModel
+        .findOne({ _id: id })
+        .populate({ path: 'authorId', select: 'fullname avatar' })
+        .populate({ path: 'userTags', select: 'fullname avatar' })
+        .lean(),
       this.postLikeModel.findOne({ authorId: user._id, postId: id }),
     ]);
     if (!post) throw new BadRequestException('Post not found');

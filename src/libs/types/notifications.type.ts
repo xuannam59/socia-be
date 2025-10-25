@@ -37,7 +37,8 @@ export interface INotification {
 }
 
 export interface INotificationResponse {
-  senders: {
+  _id: string;
+  senderIds: {
     _id: string;
     fullname: string;
     avatar: string;
@@ -48,9 +49,6 @@ export interface INotificationResponse {
   type: string;
   seen: boolean;
   isRead: boolean;
-  total: number;
-  notificationId: string;
-  latestAt: Date;
 }
 
 export interface INotificationUserTag {
@@ -60,5 +58,11 @@ export interface INotificationUserTag {
     fullname: string;
     avatar: string;
   }[];
+  message: string;
+}
+
+export interface INotificationPostLike {
+  postId: string;
+  creatorId: string;
   message: string;
 }
