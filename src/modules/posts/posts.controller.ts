@@ -1,9 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query } from '@nestjs/common';
-import { PostsService } from './posts.service';
-import { CreatePostDto, CreatePostLikeDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
+import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
 import type { IRequest } from '@social/types/cores.type';
-import { Throttle } from '@nestjs/throttler';
+import { CreatePostDto, CreatePostLikeDto } from './dto/create-post.dto';
+import { PostsService } from './posts.service';
 
 @Controller('posts')
 export class PostsController {
@@ -29,13 +27,8 @@ export class PostsController {
     return this.postsService.findAll(query, req.user);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    return this.postsService.update(+id, updatePostDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.postsService.remove(+id);
+  @Get(':id')
+  findOne(@Param('id') id: string, @Req() req: IRequest) {
+    return this.postsService.findOne(id, req.user);
   }
 }

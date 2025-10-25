@@ -117,22 +117,22 @@ export class PostsService {
     return postsWithLikeStatus;
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid post id');
     }
-    const post = await this.postModel.findOne({ _id: id });
-    if (!post) {
-      throw new BadRequestException('Post not found');
-    }
-    return post.toObject();
-  }
+    const [post, userLike] = await Promise.all([
+      this.postModel.findOne({ _id: id }).populate({ path: 'userTags', select: 'fullname avatar' }).lean(),
+      this.postLikeModel.findOne({ authorId: user._id, postId: id }),
+    ]);
+    if (!post) throw new BadRequestException('Post not found');
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+    return {
+      ...post,
+      userLiked: {
+        isLiked: userLike ? true : false,
+        type: userLike ? userLike.type : null,
+      },
+    };
   }
 }

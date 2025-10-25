@@ -51,6 +51,7 @@ export class NotificationsService {
           seen: { $last: '$seen' },
           notificationId: { $first: '$_id' },
           latestAt: { $max: '$createdAt' },
+          entityType: { $first: '$entityType' },
         },
       },
       {
@@ -59,6 +60,7 @@ export class NotificationsService {
           receiverId: '$_id.receiverId',
           type: '$_id.type',
           entityId: '$_id.entityId',
+          entityType: 1,
           message: 1,
           senders: 1,
           total: 1,
