@@ -21,7 +21,7 @@ export class NotificationsService {
       this.notificationModel
         .find(filter)
         .populate('senderIds', 'fullname avatar')
-        .sort({ updatedAt: -1 })
+        .sort({ latestAt: -1 })
         .limit(limitNumber)
         .skip(skip)
         .lean(),

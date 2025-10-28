@@ -31,6 +31,9 @@ export class Notification {
   entityId: string;
 
   @Prop({ type: String })
+  subEntityId: string;
+
+  @Prop({ type: String })
   message: string;
 
   @Prop({ type: Boolean, default: false })
@@ -40,11 +43,14 @@ export class Notification {
   isRead: boolean;
 
   @Prop({ type: Date })
+  latestAt: Date;
+
+  @Prop({ type: Date })
   expiresAt?: Date;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);
 
 NotificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-NotificationSchema.index({ receiverId: 1, type: 1, entityId: 1, createdAt: -1 });
-NotificationSchema.index({ receiverId: 1, isRead: 1, type: 1, entityId: 1, createdAt: -1 });
+NotificationSchema.index({ receiverId: 1, latestAt: -1 });
+NotificationSchema.index({ receiverId: 1, isRead: 1, type: 1, entityId: 1, latestAt: -1 });

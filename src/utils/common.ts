@@ -35,3 +35,12 @@ export const getFileCategory = (contentType: string) => {
   if (contentType.startsWith('application/pdf')) return 'documents';
   return 'files';
 };
+
+export const convertCommentMention = (message: string) => {
+  if (!message) return '';
+  const regex = /@\[([^\]]+)\]\([^)]+\)/g;
+
+  return message.replace(regex, (match, name) => {
+    return `@${name}`;
+  });
+};

@@ -10,7 +10,6 @@ export enum ENotificationType {
 
 export enum EEntityType {
   POST = 'post',
-  COMMENT = 'comment',
   STORY = 'story',
   MESSAGE = 'message',
   CONVERSATION = 'conversation',
@@ -45,6 +44,7 @@ export interface INotificationResponse {
   }[];
   message: string;
   entityId: string;
+  subEntityId?: string;
   entityType: EEntityType;
   type: string;
   seen: boolean;
@@ -64,5 +64,28 @@ export interface INotificationUserTag {
 export interface INotificationPostLike {
   postId: string;
   creatorId: string;
+  message: string;
+}
+
+export interface INotificationPostComment {
+  postId: string;
+  content: string;
+  postAuthorId: string;
+  commentId: string;
+  commentAuthorId?: string;
+  mentionsList: string[];
+}
+
+export interface INotificationCommentMention {
+  postId: string;
+  commentId: string;
+  userIds: string[];
+  message: string;
+}
+
+export interface INotificationCommentReply {
+  postId: string;
+  commentAuthorId: string;
+  commentId: string;
   message: string;
 }

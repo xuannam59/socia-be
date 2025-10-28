@@ -11,7 +11,11 @@ import {
   INotificationUserTag,
   ENotificationType,
   INotificationPostLike,
+  INotificationPostComment,
+  INotificationCommentMention,
+  INotificationCommentReply,
 } from '@social/types/notifications.type';
+import { convertCommentMention } from '@social/utils/common';
 
 @Injectable()
 export class NotificationsSocketService {
@@ -32,6 +36,7 @@ export class NotificationsSocketService {
           entityType: EEntityType.POST,
           entityId: postId,
           message,
+          latestAt: new Date(),
         })),
       );
       const userIds = userTags.map(user => user._id);
@@ -93,7 +98,7 @@ export class NotificationsSocketService {
       if (existingNotification) {
         const result = await this.notificationModel.updateOne(
           { _id: existingNotification._id, senderIds: { $ne: userInfo._id } },
-          { $addToSet: { senderIds: userInfo._id } },
+          { $addToSet: { senderIds: userInfo._id }, latestAt: new Date() },
         );
         const senders = existingNotification.senderIds as unknown as INotificationResponse['senderIds'];
         if (result.modifiedCount > 0) {
@@ -108,12 +113,183 @@ export class NotificationsSocketService {
           entityType: EEntityType.POST,
           entityId: postId,
           message,
+          latestAt: new Date(),
         });
         data._id = notification._id.toString();
       }
       client.to(creatorId).emit(NOTIFICATION_MESSAGE.RESPONSE, data);
     } catch (error) {
       console.log('postLikeNotification error', error);
+      return;
+    }
+  }
+
+  async postCommentNotification(client: Socket, payload: INotificationPostComment) {
+    try {
+      const { postId, postAuthorId, content, commentId, mentionsList, commentAuthorId } = payload;
+      const message = convertCommentMention(content);
+      const userInfo = client.data.user;
+      if (postAuthorId !== userInfo._id) {
+        const existingNotificationComment = await this.notificationModel
+          .findOne({
+            entityType: EEntityType.POST,
+            entityId: postId,
+            receiverId: postAuthorId,
+            type: ENotificationType.POST_COMMENT,
+          })
+          .populate('senderIds', 'fullname avatar')
+          .lean();
+
+        const data: INotificationResponse = {
+          _id: '',
+          senderIds: [
+            {
+              _id: userInfo._id,
+              fullname: userInfo.fullname,
+              avatar: userInfo.avatar,
+            },
+          ],
+          message,
+          entityId: postId,
+          subEntityId: commentId,
+          entityType: EEntityType.POST,
+          type: ENotificationType.POST_COMMENT,
+          seen: false,
+          isRead: false,
+        };
+        if (existingNotificationComment) {
+          const senders = existingNotificationComment.senderIds as unknown as INotificationResponse['senderIds'];
+          const senderIds = senders.filter(sender => sender._id.toString() !== userInfo._id).map(sender => sender._id);
+          const senderIdSet = new Set(senderIds);
+          senderIdSet.add(userInfo._id);
+          const result = await this.notificationModel.updateOne(
+            { _id: existingNotificationComment._id },
+            { senderIds: [...senderIdSet], message, latestAt: new Date(), subEntityId: commentId },
+          );
+          if (result.modifiedCount > 0) {
+            data._id = existingNotificationComment._id.toString();
+            const existingSenderIds = senders.filter(sender => sender._id.toString() !== userInfo._id);
+            data.senderIds = [...existingSenderIds, ...data.senderIds];
+          }
+        } else {
+          const notificationComment = await this.notificationModel.create({
+            senderIds: [userInfo._id],
+            receiverId: postAuthorId,
+            type: ENotificationType.POST_COMMENT,
+            entityType: EEntityType.POST,
+            entityId: postId,
+            subEntityId: commentId,
+            message,
+            latestAt: new Date(),
+          });
+          data._id = notificationComment._id.toString();
+        }
+        client.to(postAuthorId).emit(NOTIFICATION_MESSAGE.RESPONSE, data);
+      }
+
+      const userIds = new Set(mentionsList);
+      userIds.delete(postAuthorId);
+      userIds.delete(commentAuthorId || '');
+      if (userIds.size > 0) {
+        await this.postCommentMentionNotification(client, {
+          postId,
+          commentId,
+          userIds: Array.from(userIds),
+          message,
+        });
+      }
+
+      if (commentAuthorId && commentAuthorId !== userInfo._id) {
+        await this.postCommentReplyNotification(client, {
+          postId,
+          commentId,
+          message,
+          commentAuthorId,
+        });
+      }
+      return;
+    } catch (error) {
+      console.log('postCommentNotification error', error);
+      return;
+    }
+  }
+
+  async postCommentMentionNotification(client: Socket, payload: INotificationCommentMention) {
+    try {
+      const { postId, commentId, userIds, message } = payload;
+      const userInfo = client.data.user;
+      const notifications = await this.notificationModel.insertMany(
+        userIds.map(userId => ({
+          senderIds: [userInfo._id],
+          receiverId: userId,
+          type: ENotificationType.COMMENT_MENTION,
+          entityType: EEntityType.POST,
+          entityId: postId,
+          subEntityId: commentId,
+          message,
+          latestAt: new Date(),
+        })),
+      );
+      if (notifications.length === 0) return;
+      const data: INotificationResponse = {
+        _id: new Date().getTime().toString(),
+        senderIds: [
+          {
+            _id: userInfo._id,
+            fullname: userInfo.fullname,
+            avatar: userInfo.avatar,
+          },
+        ],
+        message,
+        entityId: postId,
+        subEntityId: commentId,
+        entityType: EEntityType.POST,
+        type: ENotificationType.COMMENT_MENTION,
+        seen: false,
+        isRead: false,
+      };
+      client.to(userIds).emit(NOTIFICATION_MESSAGE.RESPONSE, data);
+      return;
+    } catch (error) {
+      console.log('postCommentMentionNotification error', error);
+      return;
+    }
+  }
+
+  async postCommentReplyNotification(client: Socket, payload: INotificationCommentReply) {
+    try {
+      const { postId, commentId, message, commentAuthorId } = payload;
+      const userInfo = client.data.user;
+      const notification = await this.notificationModel.create({
+        senderIds: [userInfo._id],
+        receiverId: commentAuthorId,
+        type: ENotificationType.COMMENT_REPLY,
+        entityType: EEntityType.POST,
+        entityId: postId,
+        subEntityId: commentId,
+        message,
+        latestAt: new Date(),
+      });
+      const data: INotificationResponse = {
+        _id: notification._id.toString(),
+        senderIds: [
+          {
+            _id: userInfo._id,
+            fullname: userInfo.fullname,
+            avatar: userInfo.avatar,
+          },
+        ],
+        message,
+        entityId: postId,
+        subEntityId: commentId,
+        entityType: EEntityType.POST,
+        type: ENotificationType.COMMENT_REPLY,
+        seen: false,
+        isRead: false,
+      };
+      client.to(commentAuthorId).emit(NOTIFICATION_MESSAGE.RESPONSE, data);
+    } catch (error) {
+      console.log('postCommentReplyNotification error', error);
       return;
     }
   }
