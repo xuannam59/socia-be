@@ -3,19 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { IUser } from '@social/types/users.type';
 import { Model } from 'mongoose';
 import { CreatePostDto, CreatePostLikeDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
-import { PostLike } from './schemas/post-like.schema';
 import { Post } from './schemas/post.schema';
 import mongoose from 'mongoose';
 
 @Injectable()
 export class PostsService {
-  constructor(
-    @InjectModel(Post.name) private postModel: Model<Post>,
-    @InjectModel(PostLike.name) private postLikeModel: Model<PostLike>,
-  ) {}
+  constructor(@InjectModel(Post.name) private postModel: Model<Post>) {}
 
-  async create(createPostDto: CreatePostDto, user: IUser) {
+  async createPost(createPostDto: CreatePostDto, user: IUser) {
     const { content, privacy, medias, userTags, feelings } = createPostDto;
     const payload = {
       content,
@@ -31,35 +26,23 @@ export class PostsService {
     };
   }
 
-  async actionLike(createPostLikeDto: CreatePostLikeDto, user: IUser) {
+  async actionPostLike(createPostLikeDto: CreatePostLikeDto, user: IUser) {
     const { postId, type, isLike } = createPostLikeDto;
 
-    const existingPostLike = await this.postLikeModel.findOne({
-      authorId: user._id,
-      postId,
-    });
-
-    if (!existingPostLike && !isLike) return;
-
     if (isLike) {
-      if (existingPostLike) {
-        if (existingPostLike.type !== type) {
-          await this.postLikeModel.updateOne({ _id: existingPostLike._id }, { type });
-        }
-      } else {
-        // socket emit
-        await Promise.all([
-          this.postLikeModel.create({ authorId: user._id, postId, type }),
-          this.postModel.updateOne({ _id: postId }, { $inc: { likeCount: 1 } }),
-        ]);
+      const result = await this.postModel.updateOne(
+        { _id: postId, 'userLikes.userId': user._id },
+        { $set: { 'userLikes.$.type': type } },
+      );
+
+      if (result.modifiedCount === 0) {
+        await this.postModel.updateOne({ _id: postId }, { $push: { userLikes: { userId: user._id, type } } });
       }
     } else {
-      if (existingPostLike) {
-        await Promise.all([
-          this.postLikeModel.deleteOne({ _id: existingPostLike._id }),
-          this.postModel.updateOne({ _id: postId }, { $inc: { likeCount: -1 } }),
-        ]);
-      }
+      await this.postModel.updateOne(
+        { _id: postId, 'userLikes.userId': user._id },
+        { $pull: { userLikes: { userId: user._id } } },
+      );
     }
 
     return {
@@ -68,75 +51,61 @@ export class PostsService {
     };
   }
 
-  async findUserLike(postId: string, user: IUser) {
-    const existPostLike = await this.postLikeModel.findOne({ authorId: user._id, postId });
-    return {
-      _id: existPostLike?._id,
-      type: existPostLike?.type,
+  async fetchPosts(query: any, user: IUser) {
+    const { userId } = query;
+    const pageNumber = query.page ? Number(query.page) : 1;
+    const limitNumber = query.limit ? Number(query.limit) : 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const filter: any = {
+      privacy: 'public',
     };
-  }
-
-  async findAll(query: any, user: IUser) {
-    const { page = 1, limit = 10, userId } = query;
-    const skip = (page - 1) * limit;
-
-    const filter: any = {};
     if (userId) {
       filter.authorId = userId;
     }
 
-    const posts = await this.postModel
-      .find(filter)
-      .populate({ path: 'authorId', select: 'fullname avatar' })
-      .populate({ path: 'userTags', select: 'fullname avatar' })
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 })
-      .lean();
-
-    // Map qua posts để thêm thông tin like của user hiện tại
-    const postsWithLikeStatus = await Promise.all(
-      posts.map(async post => {
-        const userLike = await this.postLikeModel.findOne({
-          authorId: user._id,
-          postId: post._id.toString(),
-        });
-
-        const liked = {
-          isLiked: userLike ? true : false,
-          type: userLike ? userLike.type : null,
-        };
-
-        return {
-          ...post,
-          userLiked: liked,
-        };
-      }),
-    );
-
-    return postsWithLikeStatus;
-  }
-
-  async findOne(id: string, user: IUser) {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('Invalid post id');
-    }
-    const [post, userLike] = await Promise.all([
+    const [posts, total] = await Promise.all([
       this.postModel
-        .findOne({ _id: id })
+        .find(filter)
         .populate({ path: 'authorId', select: 'fullname avatar' })
         .populate({ path: 'userTags', select: 'fullname avatar' })
+        .skip(skip)
+        .limit(limitNumber)
+        .sort({ createdAt: -1 })
         .lean(),
-      this.postLikeModel.findOne({ authorId: user._id, postId: id }),
+      this.postModel.countDocuments(filter),
     ]);
+
+    const newPosts = posts.map(post => {
+      const userLiked = post.userLikes.find(like => like.userId === user._id);
+      return {
+        ...post,
+        userLiked: userLiked ?? null,
+      };
+    });
+
+    return {
+      list: newPosts,
+      meta: { total },
+    };
+  }
+
+  async findPostById(postId: string, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      throw new BadRequestException('Invalid post id');
+    }
+    const post = await this.postModel
+      .findById(postId)
+      .populate({ path: 'authorId', select: 'fullname avatar' })
+      .populate({ path: 'userTags', select: 'fullname avatar' })
+      .lean();
     if (!post) throw new BadRequestException('Post not found');
+
+    const userLiked = post.userLikes.find(like => like.userId === user._id);
 
     return {
       ...post,
-      userLiked: {
-        isLiked: userLike ? true : false,
-        type: userLike ? userLike.type : null,
-      },
+      userLiked: userLiked ?? null,
     };
   }
 }

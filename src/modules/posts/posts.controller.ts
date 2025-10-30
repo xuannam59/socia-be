@@ -8,27 +8,22 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post()
-  create(@Body() createPostDto: CreatePostDto, @Req() req: IRequest) {
-    return this.postsService.create(createPostDto, req.user);
+  createPost(@Body() createPostDto: CreatePostDto, @Req() req: IRequest) {
+    return this.postsService.createPost(createPostDto, req.user);
   }
 
   @Post('likes')
-  actionLike(@Body() createPostLikeDto: CreatePostLikeDto, @Req() req: IRequest) {
-    return this.postsService.actionLike(createPostLikeDto, req.user);
-  }
-
-  @Get('likes/:postId')
-  findUserLike(@Param('postId') postId: string, @Req() req: IRequest) {
-    return this.postsService.findUserLike(postId, req.user);
+  actionPostLike(@Body() createPostLikeDto: CreatePostLikeDto, @Req() req: IRequest) {
+    return this.postsService.actionPostLike(createPostLikeDto, req.user);
   }
 
   @Get()
-  findAll(@Query() query, @Req() req: IRequest) {
-    return this.postsService.findAll(query, req.user);
+  fetchPosts(@Query() query, @Req() req: IRequest) {
+    return this.postsService.fetchPosts(query, req.user);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @Req() req: IRequest) {
-    return this.postsService.findOne(id, req.user);
+  findPostById(@Param('id') id: string, @Req() req: IRequest) {
+    return this.postsService.findPostById(id, req.user);
   }
 }

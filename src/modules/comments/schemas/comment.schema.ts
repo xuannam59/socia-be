@@ -32,6 +32,7 @@ export class Comment {
         },
       },
     ],
+    _id: false,
   })
   mentions: {
     userId: string;
@@ -41,14 +42,17 @@ export class Comment {
     };
   }[];
 
+  @Prop({ type: [Object], default: [] })
+  userLikes: {
+    userId: string;
+    type: number;
+  }[];
+
   @Prop({ type: Types.ObjectId, ref: Comment.name, default: null })
   parentId: Types.ObjectId | null;
 
   @Prop({ type: Number, min: 0, max: 2 })
   level: number;
-
-  @Prop({ type: Number, default: 0 })
-  likeCount: number;
 
   @Prop({ type: Number, default: 0 })
   replyCount: number;

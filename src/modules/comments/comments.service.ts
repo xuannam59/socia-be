@@ -1,21 +1,18 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { CommentLike, CommentLikeDocument } from './schemas/comment-like.schema';
-import { Comment, CommentDocument } from './schemas/comment.schema';
-import mongoose, { Model } from 'mongoose';
-import { CreateCommentDto, CreateCommentLikeDto } from './dto/create-comment.dto';
-import { IUser } from '@social/types/users.type';
-import { PostsService } from '../posts/posts.service';
-import { Post, PostDocument } from '../posts/schemas/post.schema';
 import { ICommentQuery } from '@social/types/comment.type';
+import { IUser } from '@social/types/users.type';
+import mongoose, { Model } from 'mongoose';
 import pLimit from 'p-limit';
+import { Post, PostDocument } from '../posts/schemas/post.schema';
 import { UploadsService } from '../uploads/uploads.service';
+import { CreateCommentDto, CreateCommentLikeDto } from './dto/create-comment.dto';
+import { Comment, CommentDocument } from './schemas/comment.schema';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
-    @InjectModel(CommentLike.name) private commentLikeModel: Model<CommentLikeDocument>,
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
     private readonly uploadsService: UploadsService,
   ) {}
@@ -61,7 +58,10 @@ export class CommentsService {
     };
   }
 
-  async getComments(postId: string, user: IUser, query: ICommentQuery) {
+  async getComments(postId: string, query: ICommentQuery) {
+    const pageNumber = query.page ? Number(query.page) : 1;
+    const limitNumber = query.limit ? Number(query.limit) : 10;
+    const skip = (pageNumber - 1) * limitNumber;
     const existingPost = await this.postModel.findById(postId);
     if (!existingPost) {
       throw new BadRequestException('Post not found');
@@ -78,25 +78,11 @@ export class CommentsService {
       filter.parentId = query.parentId;
     }
 
-    const comments = await this.commentModel.find(filter).populate('authorId', 'fullname avatar').lean();
-
-    const commentsWithLikeStatus = await Promise.all(
-      comments.map(async comment => {
-        const userLike = await this.commentLikeModel.findOne({
-          commentId: comment._id.toString(),
-          authorId: user._id,
-        });
-        const liked = {
-          isLiked: userLike ? true : false,
-          type: userLike ? userLike.type : null,
-        };
-        return {
-          ...comment,
-          userLiked: liked,
-        };
-      }),
-    );
-    return commentsWithLikeStatus;
+    const [comments, total] = await Promise.all([
+      this.commentModel.find(filter).populate('authorId', 'fullname avatar').limit(limitNumber).skip(skip).lean(),
+      this.commentModel.countDocuments(filter),
+    ]);
+    return { list: comments, meta: { total } };
   }
 
   async actionLike(createCommentLikeDto: CreateCommentLikeDto, user: IUser) {
@@ -104,30 +90,17 @@ export class CommentsService {
     if (!mongoose.Types.ObjectId.isValid(commentId)) {
       throw new BadRequestException('Comment not found');
     }
-    const existingCommentLike = await this.commentLikeModel.findOne({
-      commentId,
-      authorId: user._id,
-    });
-    if (!existingCommentLike && !isLike) return;
-
     if (isLike) {
-      if (existingCommentLike) {
-        if (existingCommentLike.type !== type) {
-          await this.commentLikeModel.updateOne({ _id: existingCommentLike._id }, { type });
-        }
-      } else {
-        await Promise.all([
-          this.commentLikeModel.create({ commentId, authorId: user._id, type }),
-          this.commentModel.updateOne({ _id: commentId }, { $inc: { likeCount: 1 } }),
-        ]);
+      const result = await this.commentModel.updateOne(
+        { _id: commentId, 'userLikes.userId': user._id },
+        { $set: { 'userLikes.$.type': type } },
+      );
+
+      if (result.modifiedCount === 0) {
+        await this.commentModel.updateOne({ _id: commentId }, { $push: { userLikes: { userId: user._id, type } } });
       }
     } else {
-      if (existingCommentLike) {
-        await Promise.all([
-          this.commentLikeModel.deleteOne({ _id: existingCommentLike._id }),
-          this.commentModel.updateOne({ _id: commentId }, { $inc: { likeCount: -1 } }),
-        ]);
-      }
+      await this.commentModel.updateOne({ _id: commentId }, { $pull: { userLikes: { userId: user._id } } });
     }
 
     return {
@@ -178,7 +151,6 @@ export class CommentsService {
     await Promise.all(findTasks);
     const promises: any[] = [
       this.commentModel.deleteMany({ _id: { $in: commentIds } }),
-      this.commentLikeModel.deleteMany({ commentId: { $in: commentIds } }),
       this.postModel.updateOne({ _id: existingComment.postId }, { $inc: { commentCount: -commentIds.length } }),
       this.uploadsService.deleteFiles(keysS3),
     ];

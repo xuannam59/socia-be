@@ -27,8 +27,11 @@ export class Post {
   @Prop()
   feelings: string;
 
-  @Prop({ default: 0, type: Number })
-  likeCount: number;
+  @Prop({ type: [Object], default: [] })
+  userLikes: {
+    userId: string;
+    type: number;
+  }[];
 
   @Prop({ default: 0, type: Number })
   commentCount: number;
@@ -42,5 +45,5 @@ export class Post {
 
 export const PostSchema = SchemaFactory.createForClass(Post);
 
-PostSchema.index({ authorId: 1, createdAt: -1 }); // Get posts by author
-PostSchema.index({ createdAt: -1 }); // Get posts by createdAt
+PostSchema.index({ authorId: 1, createdAt: -1 });
+PostSchema.index({ createdAt: -1 });

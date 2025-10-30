@@ -14,8 +14,8 @@ export class CommentsController {
   }
 
   @Get(':id')
-  getComments(@Param('id') postId: string, @Req() req: IRequest, @Query() query: ICommentQuery) {
-    return this.commentsService.getComments(postId, req.user, query);
+  getComments(@Param('id') postId: string, @Query() query: ICommentQuery) {
+    return this.commentsService.getComments(postId, query);
   }
 
   @Post('likes')
