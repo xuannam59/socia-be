@@ -88,7 +88,10 @@ export class ConversationsService {
     if (!mongoose.Types.ObjectId.isValid(userIds[0]) || !mongoose.Types.ObjectId.isValid(userIds[1])) {
       throw new BadRequestException('Invalid user ids');
     }
-    const conversation = await this.conversationModel.findOne({ users: { $all: userIds } }).lean();
+    const conversation = await this.conversationModel
+      .findOne({ users: { $all: userIds } })
+      .populate('lastMessage', 'content type sender')
+      .lean();
     if (conversation) {
       return conversation;
     }
@@ -128,18 +131,6 @@ export class ConversationsService {
     return 'update seen success';
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} conversation`;
-  }
-
-  update(id: number, updateConversationDto: UpdateConversationDto) {
-    return `This action updates a #${id} conversation`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} conversation`;
-  }
-
   async getGroupConversations(user: IUser) {
     const filter: any = {
       users: { $in: [user._id] },
@@ -147,10 +138,16 @@ export class ConversationsService {
     };
     const conversations = await this.conversationModel
       .find(filter)
+      .populate('lastMessage', 'content type sender')
       .populate('users', 'fullname avatar isOnline lastActive')
       .limit(10)
       .sort({ lastMessageAt: -1 })
       .lean();
-    return conversations;
+
+    const newConversations = conversations.map(conversation => ({
+      ...conversation,
+      isExist: true,
+    }));
+    return newConversations;
   }
 }

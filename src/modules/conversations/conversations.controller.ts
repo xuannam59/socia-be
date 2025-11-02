@@ -13,6 +13,11 @@ export class ConversationsController {
     return this.conversationsService.createGroupConversation(createConversationDto, req.user);
   }
 
+  @Post('id-or-create')
+  getIdOrCreate(@Body() userIds: string[]) {
+    return this.conversationsService.getIdOrCreate(userIds);
+  }
+
   @Post('seen')
   seen(@Body('conversationIds') conversationIds: string[], @Req() req: IRequest) {
     return this.conversationsService.updateSeen(conversationIds, req.user);
@@ -33,23 +38,8 @@ export class ConversationsController {
     return this.conversationsService.getUnSeenConversations(req.user);
   }
 
-  @Post('id-or-create')
-  getIdOrCreate(@Body() userIds: string[]) {
-    return this.conversationsService.getIdOrCreate(userIds);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.conversationsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateConversationDto: UpdateConversationDto) {
-    return this.conversationsService.update(+id, updateConversationDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.conversationsService.remove(+id);
+  @Get('group')
+  getGroupConversations(@Req() req: IRequest) {
+    return this.conversationsService.getGroupConversations(req.user);
   }
 }

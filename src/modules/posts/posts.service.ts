@@ -21,9 +21,7 @@ export class PostsService {
       authorId: user._id,
     };
     const result = await this.postModel.create(payload);
-    return {
-      _id: result._id,
-    };
+    return result;
   }
 
   async actionPostLike(createPostLikeDto: CreatePostLikeDto, user: IUser) {
