@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Headers,
   HttpStatus,
   ParseFilePipeBuilder,
   Post,
@@ -23,6 +24,8 @@ import type { IRequest } from '@social/types/cores.type';
 @Controller('uploads')
 export class UploadsController {
   constructor(private readonly uploadsService: UploadsService) {}
+
+  // S3 Upload
 
   // Khởi tạo chunked upload
   @Post('initiate-chunked')
@@ -73,5 +76,28 @@ export class UploadsController {
   @Delete()
   async deleteFile(@Query('key') key: string) {
     return this.uploadsService.deleteFile(key);
+  }
+
+  // Cloudinary Upload
+  @Post('cloudinary')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFileToCloudinary(
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType:
+            /^image\/(jpeg|png|gif|webp)$|^video\/(mp4|webm|ogg)$|^audio\/(mpeg|mp3|wav|ogg)$|^application\/(pdf|msword)$|^text\/plain$/i,
+        })
+        .addMaxSizeValidator({
+          maxSize: 10 * 1024 * 1024, // 10MB
+        })
+        .build({
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    file: Express.Multer.File,
+    @Body('folder-name') folderName: string,
+  ) {
+    return this.uploadsService.uploadFileToCloudinary(file, folderName);
   }
 }

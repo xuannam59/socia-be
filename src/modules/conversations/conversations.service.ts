@@ -10,9 +10,21 @@ import { IUser } from '@social/types/users.type';
 export class ConversationsService {
   constructor(@InjectModel(Conversation.name) private conversationModel: Model<ConversationDocument>) {}
 
-  create(createConversationDto: CreateConversationDto) {
-    const { userIds, name, avatar, isGroup } = createConversationDto;
-    return 'This action adds a new conversation';
+  async createGroupConversation(createConversationDto: CreateConversationDto, user: IUser) {
+    const { userIds, name, avatar } = createConversationDto;
+    const members = [...userIds, user._id];
+
+    const newConversation = await this.conversationModel.create({
+      users: members,
+      name,
+      avatar,
+      usersState: members.map(member => ({ user: member, readLastMessage: null })),
+      isGroup: true,
+      admins: [user._id],
+      seen: [user._id],
+      lastMessageAt: new Date(),
+    });
+    return newConversation;
   }
 
   async findAll(query: any, user: IUser) {
@@ -22,7 +34,7 @@ export class ConversationsService {
 
     const filter: any = {
       users: { $in: [user._id] },
-      lastMessage: { $ne: null },
+      $or: [{ lastMessage: { $ne: null } }, { isGroup: true }],
     };
 
     const [conversations, total] = await Promise.all([
@@ -37,15 +49,18 @@ export class ConversationsService {
       this.conversationModel.countDocuments(filter),
     ]);
     const newConversations = conversations.map(conversation => {
-      if (conversation.isGroup) {
-        return conversation;
+      let name = conversation.name;
+      let avatar = conversation.avatar;
+      if (!conversation.isGroup) {
+        const users = conversation.users as unknown as IUser[];
+        const otherUser = users.find(other => other._id.toString() !== user._id);
+        name = otherUser?.fullname || 'Người dùng';
+        avatar = otherUser?.avatar || '';
       }
-      const users = conversation.users as unknown as IUser[];
-      const otherUser = users.find(other => other._id.toString() !== user._id);
       return {
         ...conversation,
-        name: otherUser?.fullname || 'Người dùng',
-        avatar: otherUser?.avatar || '',
+        name,
+        avatar,
         isExist: true,
       };
     });
@@ -123,5 +138,19 @@ export class ConversationsService {
 
   remove(id: number) {
     return `This action removes a #${id} conversation`;
+  }
+
+  async getGroupConversations(user: IUser) {
+    const filter: any = {
+      users: { $in: [user._id] },
+      isGroup: true,
+    };
+    const conversations = await this.conversationModel
+      .find(filter)
+      .populate('users', 'fullname avatar isOnline lastActive')
+      .limit(10)
+      .sort({ lastMessageAt: -1 })
+      .lean();
+    return conversations;
   }
 }

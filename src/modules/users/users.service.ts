@@ -105,25 +105,27 @@ export class UsersService {
   }
 
   async fetchUserFriendList(user: IUser, query: IFriendListQuery) {
-    const { page, limit, search } = query;
+    const { page, limit, search, exclude } = query;
+    const userIds = exclude ? exclude.split(',') : [];
     const pageNumber = page ? Number(page) : 1;
     const limitNumber = limit ? Number(limit) : 10;
     const skip = (pageNumber - 1) * limitNumber;
 
+    let myFriends = user.friends;
+
+    if (userIds.length > 0) {
+      myFriends = myFriends.filter(friend => !exclude.includes(friend));
+    }
+
     const filter: any = {
-      _id: { $in: user.friends },
+      _id: { $in: myFriends },
     };
 
     if (search) {
       filter.slug = new RegExp(search, 'i');
     }
 
-    const friends = await this.userModel
-      .find(filter)
-      .skip(skip)
-      .limit(limitNumber)
-      .select('-password -googleId')
-      .lean();
+    const friends = await this.userModel.find(filter).skip(skip).limit(limitNumber).select('fullname avatar').lean();
     return { friends: friends, total: user.friends.length };
   }
 

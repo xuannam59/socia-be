@@ -9,8 +9,8 @@ export class ConversationsController {
   constructor(private readonly conversationsService: ConversationsService) {}
 
   @Post()
-  create(@Body() createConversationDto: CreateConversationDto) {
-    return this.conversationsService.create(createConversationDto);
+  createGroupConversation(@Body() createConversationDto: CreateConversationDto, @Req() req: IRequest) {
+    return this.conversationsService.createGroupConversation(createConversationDto, req.user);
   }
 
   @Post('seen')

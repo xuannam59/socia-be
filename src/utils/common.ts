@@ -44,3 +44,17 @@ export const convertCommentMention = (message: string) => {
     return `@${name}`;
   });
 };
+
+export const getPublicIdFromUrl = (url: string) => {
+  try {
+    const regex = /\/upload\/(?:v\d+\/)?(.+?)\.(jpg|jpeg|png|gif|webp|mp4|mov|pdf|docx|txt|mp3|wav|ogg)$/i;
+    const match = url.match(regex);
+    if (match && match[1]) {
+      return match[1]; // Đây là publicId
+    }
+    return null;
+  } catch (error) {
+    console.error('Error extracting publicId:', error);
+    return null;
+  }
+};

@@ -1,19 +1,28 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { CloudinaryService } from '@social/configs/clouds/cloudinary.service';
 import { S3Service } from '@social/configs/clouds/s3.service';
-import { convertSlug, generateS3Key } from '@social/utils/common';
-import { v4 as uuidv4 } from 'uuid';
+import { IUser } from '@social/types/users.type';
+import { generateS3Key } from '@social/utils/common';
+import pLimit from 'p-limit';
+import tinify from 'tinify';
 import {
   AbortChunkedUploadDto,
   CompleteChunkedUploadDto,
   GetChunkUploadUrlDto,
   InitChunkedUploadDto,
 } from './dto/upload.dto';
-import { IUser } from '@social/types/users.type';
-import pLimit from 'p-limit';
 
 @Injectable()
 export class UploadsService {
-  constructor(private readonly s3Service: S3Service) {}
+  constructor(
+    private readonly s3Service: S3Service,
+    private readonly cloudinaryService: CloudinaryService,
+    private readonly configService: ConfigService,
+  ) {
+    tinify.key = this.configService.get<string>('TINIFY_API_KEY', '');
+  }
+
   // Khởi tạo chunked upload
   async initChunkedUpload(initChunkedUploadDto: InitChunkedUploadDto, user: IUser) {
     const { filename, contentType, fileSize } = initChunkedUploadDto;
@@ -84,5 +93,53 @@ export class UploadsService {
     }
     await Promise.all(deleteTasks);
     return 'Deleted files successfully';
+  }
+
+  // Cloudinary Upload
+  async uploadFileToCloudinary(file: Express.Multer.File, folderName: string) {
+    try {
+      let optimizedBuffer = file.buffer;
+
+      if (file.size > 100 * 1024) {
+        const isImage = file.mimetype?.startsWith('image/');
+
+        if (isImage) {
+          try {
+            const source = tinify.fromBuffer(file.buffer);
+            const optimizedUint8Array = await source.toBuffer();
+            optimizedBuffer = Buffer.from(optimizedUint8Array);
+          } catch (error) {
+            console.log('Tinify optimization error:', error);
+            optimizedBuffer = file.buffer;
+          }
+        }
+      }
+      const optimizedFile: Express.Multer.File = {
+        ...file,
+        buffer: optimizedBuffer,
+        size: optimizedBuffer.length,
+      };
+
+      const link = await this.cloudinaryService.uploadFile(optimizedFile, folderName);
+      return {
+        fileUpload: link.secure_url,
+        publicId: link.public_id,
+      };
+    } catch (error) {
+      console.log('uploadFileToCloudinary Error:', error);
+      throw new BadRequestException('Error unable to upload file');
+    }
+  }
+
+  async deleteFileFromCloudinary(fileUrl: string) {
+    try {
+      const result = await this.cloudinaryService.deleteFile(fileUrl);
+      return {
+        result,
+      };
+    } catch (error) {
+      console.log('deleteFileFromCloudinary Error:', error);
+      throw new BadRequestException('Error unable to delete file');
+    }
   }
 }

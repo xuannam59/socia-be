@@ -50,4 +50,5 @@ export interface IFriendListQuery {
   page: number;
   limit: number;
   search: string;
+  exclude: string;
 }

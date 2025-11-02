@@ -46,6 +46,7 @@
     "cacheable": "1.10.3",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.2",
+    "cloudinary": "^2.8.0",
     "cookie-parser": "1.4.7",
     "handlebars": "4.7.8",
     "helmet": "8.1.0",
@@ -60,6 +61,8 @@
     "passport-local": "1.0.0",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.1",
+    "streamifier": "^0.1.1",
+    "tinify": "^1.8.2",
     "uuid": "11.1.0"
   },
   "devDependencies": {
