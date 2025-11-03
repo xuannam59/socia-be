@@ -9,12 +9,14 @@ import { User, UserDocument } from './schemas/user.schema';
 import { convertSlug } from '@social/utils/common';
 import { IFriendListQuery, IUser } from '@social/types/users.type';
 import { Conversation, ConversationDocument } from '../conversations/schemas/conversation.schema';
+import { UploadsService } from '../uploads/uploads.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Conversation.name) private conversationModel: Model<ConversationDocument>,
+    private readonly uploadsService: UploadsService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -171,5 +173,17 @@ export class UsersService {
       throw new BadRequestException('Invalid user id');
     }
     await this.userModel.updateOne({ _id: userId }, { isOnline, lastActive: new Date() });
+  }
+
+  async updateAvatar(avatar: string, user: IUser) {
+    const userInfo = await this.findOne(user._id);
+    if (!userInfo) {
+      throw new BadRequestException('User not found');
+    }
+    if (userInfo.avatar) {
+      this.uploadsService.deleteFileFromCloudinary(userInfo.avatar);
+    }
+    await this.userModel.updateOne({ _id: user._id }, { avatar });
+    return { message: 'Avatar updated successfully' };
   }
 }

@@ -6,9 +6,7 @@ import streamifier from 'streamifier';
 @Injectable()
 export class CloudinaryService {
   async uploadFile(file: Express.Multer.File, folderName: string): Promise<any> {
-    const originalName = file.originalname.split('.')[0];
-    const uniqueFilename = `${convertSlug(originalName)}-${Date.now()}`;
-
+    const uniqueFilename = `${Date.now()}`;
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
@@ -27,7 +25,7 @@ export class CloudinaryService {
 
   async deleteFile(url: string): Promise<any> {
     const publicId = getPublicIdFromUrl(url);
-    if (!publicId) throw new BadRequestException('Invalid URL');
+    if (!publicId) return;
     return cloudinary.uploader.destroy(publicId);
   }
 }

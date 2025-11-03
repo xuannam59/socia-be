@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import type { IRequest } from '@social/types/cores.type';
 import type { IFriendListQuery } from '@social/types/users.type';
@@ -20,5 +20,10 @@ export class UsersController {
   @Get(':id')
   findUserInfo(@Param('id') id: string) {
     return this.usersService.findUserInfo(id);
+  }
+
+  @Patch('avatar')
+  updateAvatar(@Body('avatar') avatar: string, @Req() req: IRequest) {
+    return this.usersService.updateAvatar(avatar, req.user);
   }
 }
