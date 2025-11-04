@@ -10,6 +10,7 @@ import { convertSlug } from '@social/utils/common';
 import { IFriendListQuery, IUser } from '@social/types/users.type';
 import { Conversation, ConversationDocument } from '../conversations/schemas/conversation.schema';
 import { UploadsService } from '../uploads/uploads.service';
+import { UpdateUserProfileDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -185,5 +186,11 @@ export class UsersService {
     }
     await this.userModel.updateOne({ _id: user._id }, { avatar });
     return { message: 'Avatar updated successfully' };
+  }
+
+  async updateUserProfile(user: IUser, updateUserDto: UpdateUserProfileDto) {
+    const { fullname, phone, address } = updateUserDto;
+    await this.userModel.updateOne({ _id: user._id }, { fullname, phone, address });
+    return 'Updated successfully';
   }
 }

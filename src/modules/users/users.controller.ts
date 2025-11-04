@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Patch, Query, Req } from '@nestjs/common'
 import { UsersService } from './users.service';
 import type { IRequest } from '@social/types/cores.type';
 import type { IFriendListQuery } from '@social/types/users.type';
+import { UpdateUserProfileDto } from './dto/update-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -25,5 +26,10 @@ export class UsersController {
   @Patch('avatar')
   updateAvatar(@Body('avatar') avatar: string, @Req() req: IRequest) {
     return this.usersService.updateAvatar(avatar, req.user);
+  }
+
+  @Patch('profile')
+  updateUserProfile(@Body() updateUserDto: UpdateUserProfileDto, @Req() req: IRequest) {
+    return this.usersService.updateUserProfile(req.user, updateUserDto);
   }
 }
