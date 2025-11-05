@@ -28,6 +28,11 @@ export class UsersController {
     return this.usersService.updateAvatar(avatar, req.user);
   }
 
+  @Patch('cover')
+  updateUserCover(@Body('cover') cover: string, @Req() req: IRequest) {
+    return this.usersService.updateUserCover(cover, req.user);
+  }
+
   @Patch('profile')
   updateUserProfile(@Body() updateUserDto: UpdateUserProfileDto, @Req() req: IRequest) {
     return this.usersService.updateUserProfile(req.user, updateUserDto);

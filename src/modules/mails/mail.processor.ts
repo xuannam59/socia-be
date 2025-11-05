@@ -1,11 +1,9 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { ConfigService } from '@nestjs/config';
-import { Job } from 'bullmq';
-import { ISendMail } from '@social/types/mail.type';
 import sgMail from '@sendgrid/mail';
-import * as fs from 'fs';
-import * as path from 'path';
-import Handlebars from 'handlebars';
+import { ISendMail } from '@social/types/mail.type';
+import { Job } from 'bullmq';
+import { mailTemplateSendOtp } from './templates/mail-template';
 
 @Processor('mail-queue')
 export class MailProcessorService extends WorkerHost {
@@ -25,13 +23,10 @@ export class MailProcessorService extends WorkerHost {
       throw new Error('SENDGRID_FROM is not configured');
     }
 
-    const templateFilePath = path.join(__dirname, './templates', `${template}.hbs`);
-    const templateSource = fs.readFileSync(templateFilePath, 'utf8');
-    const compileTemplate = Handlebars.compile(templateSource);
-    const html = compileTemplate({
-      otp: infoMail.data,
-      name: infoMail.name ?? 'bạn',
-    });
+    let html = '';
+    if (template === 'send-otp') {
+      html = mailTemplateSendOtp(infoMail.name ?? 'bạn', infoMail.data);
+    }
 
     await sgMail.send({
       to: infoMail.email,

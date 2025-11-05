@@ -188,6 +188,18 @@ export class UsersService {
     return { message: 'Avatar updated successfully' };
   }
 
+  async updateUserCover(cover: string, user: IUser) {
+    const userInfo = await this.findOne(user._id);
+    if (!userInfo) {
+      throw new BadRequestException('User not found');
+    }
+    if (userInfo.cover) {
+      this.uploadsService.deleteFileFromCloudinary(userInfo.cover);
+    }
+    await this.userModel.updateOne({ _id: user._id }, { cover });
+    return 'Cover updated successfully';
+  }
+
   async updateUserProfile(user: IUser, updateUserDto: UpdateUserProfileDto) {
     const { fullname, phone, address } = updateUserDto;
     await this.userModel.updateOne({ _id: user._id }, { fullname, phone, address });
