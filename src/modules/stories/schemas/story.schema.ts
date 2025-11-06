@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { User } from '@social/users/schemas/user.schema';
 import { HydratedDocument } from 'mongoose';
+import { StoryViewer } from './story-viewer.schema';
 
 export type StoryDocument = HydratedDocument<Story>;
 
@@ -29,14 +30,8 @@ export class Story {
   @Prop({ type: String, required: true })
   backgroundColor: string;
 
-  @Prop({ type: [Object], default: [] })
-  userLikes: {
-    userId: string;
-    type: number;
-  }[];
-
-  @Prop({ type: Number, default: 0 })
-  viewCount: number;
+  @Prop({ type: [String], default: [], ref: StoryViewer.name })
+  viewers: string[];
 
   @Prop({ type: Number, default: 15 })
   duration: number;

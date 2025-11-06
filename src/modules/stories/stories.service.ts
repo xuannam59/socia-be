@@ -7,12 +7,14 @@ import { Story, StoryDocument } from './schemas/story.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { IStoryQuery } from '@social/types/stoies.type';
 import { User, UserDocument } from '@social/users/schemas/user.schema';
+import { StoryViewer, StoryViewerDocument } from './schemas/story-viewer.schema';
 
 @Injectable()
 export class StoriesService {
   constructor(
     @InjectModel(Story.name) private storyModel: Model<StoryDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(StoryViewer.name) private storyViewerModel: Model<StoryViewerDocument>,
   ) {}
 
   async create(createStoryDto: CreateStoryDto, user: IUser) {
@@ -77,12 +79,17 @@ export class StoriesService {
     };
 
     const [listStories, myStories] = await Promise.all([
-      this.storyModel.find(filterStory).sort({ createdAt: 1 }).lean(),
+      this.storyModel
+        .find(filterStory)
+        .populate({ path: 'viewers', select: 'userId likedType' })
+        .sort({ createdAt: 1 })
+        .lean(),
       this.storyModel
         .find({
           authorId: user._id,
           expiresAt: { $gt: new Date() },
         })
+        .populate({ path: 'viewers', select: 'userId likedType' })
         .sort({ createdAt: 1 })
         .lean(),
     ]);
@@ -123,6 +130,27 @@ export class StoriesService {
     };
   }
 
+  async getStoryViewers(storyId: string) {
+    if (!mongoose.Types.ObjectId.isValid(storyId)) {
+      throw new BadRequestException('Invalid story ID');
+    }
+    const [viewers, totalViewers] = await Promise.all([
+      this.storyViewerModel
+        .find({ storyId })
+        .populate('userId', 'fullname avatar')
+        .select('userId likedType')
+        .sort({ updatedAt: -1 })
+        .lean(),
+      this.storyViewerModel.countDocuments({ storyId }),
+    ]);
+    return {
+      list: viewers,
+      meta: {
+        total: totalViewers,
+      },
+    };
+  }
+
   async findUserStory(userId: string, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       throw new BadRequestException('Invalid user id');
@@ -153,8 +181,7 @@ export class StoriesService {
     };
   }
 
-  async actionLike(storyId: string, createStoryLikeDto: CreateStoryLikeDto, user: IUser) {
-    const { type } = createStoryLikeDto;
+  async actionView(storyId: string, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(storyId)) {
       throw new BadRequestException('Invalid story ID');
     }
@@ -164,17 +191,32 @@ export class StoriesService {
       throw new BadRequestException('Story not found');
     }
 
-    const result = await this.storyModel.updateOne(
-      { _id: storyId, 'userLikes.userId': user._id },
-      { $set: { 'userLikes.$.type': type } },
-    );
+    const existingViewer = await this.storyViewerModel.findOne({ storyId, userId: user._id });
+    if (existingViewer) {
+      return;
+    }
+    const result = await this.storyViewerModel.create({ storyId, userId: user._id });
 
-    if (result.modifiedCount === 0) {
-      await this.storyModel.updateOne({ _id: storyId }, { $push: { userLikes: { userId: user._id, type } } });
-      return {
-        action: 'created',
-        type,
-      };
+    await this.storyModel.updateOne({ _id: storyId }, { $addToSet: { viewers: result._id } });
+    return 'success';
+  }
+
+  async actionLike(storyId: string, createStoryLikeDto: CreateStoryLikeDto, user: IUser) {
+    const { type } = createStoryLikeDto;
+    if (!mongoose.Types.ObjectId.isValid(storyId)) {
+      throw new BadRequestException('Invalid story ID');
+    }
+
+    const [existingStory, existingViewer] = await Promise.all([
+      this.storyModel.findById(storyId),
+      this.storyViewerModel.findOne({ storyId, userId: user._id }).lean(),
+    ]);
+    if (!existingStory || !existingViewer) {
+      throw new BadRequestException('Story not found');
+    }
+
+    if (existingViewer.likedType !== type) {
+      await this.storyViewerModel.updateOne({ _id: existingViewer._id }, { $set: { likedType: type } });
     }
 
     return {

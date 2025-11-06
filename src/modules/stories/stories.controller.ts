@@ -14,19 +14,29 @@ export class StoriesController {
     return this.storiesService.create(createStoryDto, req.user);
   }
 
+  @Post('likes/:storyId')
+  actionLike(@Param('storyId') storyId: string, @Body() createStoryLikeDto: CreateStoryLikeDto, @Req() req: IRequest) {
+    return this.storiesService.actionLike(storyId, createStoryLikeDto, req.user);
+  }
+
+  @Post('views/:storyId')
+  actionView(@Param('storyId') storyId: string, @Req() req: IRequest) {
+    return this.storiesService.actionView(storyId, req.user);
+  }
+
   @Get()
   findAll(@Query() query: IStoryQuery, @Req() req: IRequest) {
     return this.storiesService.findAll(query, req.user);
   }
 
+  @Get('viewers/:storyId')
+  getStoryViewers(@Param('storyId') storyId: string) {
+    return this.storiesService.getStoryViewers(storyId);
+  }
+
   @Get(':userId')
   findUserStory(@Param('userId') userId: string, @Req() req: IRequest) {
     return this.storiesService.findUserStory(userId, req.user);
-  }
-
-  @Post('likes/:storyId')
-  actionLike(@Param('storyId') storyId: string, @Body() createStoryLikeDto: CreateStoryLikeDto, @Req() req: IRequest) {
-    return this.storiesService.actionLike(storyId, createStoryLikeDto, req.user);
   }
 
   @Patch(':id')
