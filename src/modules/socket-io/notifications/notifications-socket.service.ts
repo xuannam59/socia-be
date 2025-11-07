@@ -14,6 +14,7 @@ import {
   INotificationPostComment,
   INotificationCommentMention,
   INotificationCommentReply,
+  INotificationStoryReaction,
 } from '@social/types/notifications.type';
 import { convertCommentMention } from '@social/utils/common';
 
@@ -290,6 +291,67 @@ export class NotificationsSocketService {
       client.to(commentAuthorId).emit(NOTIFICATION_MESSAGE.RESPONSE, data);
     } catch (error) {
       console.log('postCommentReplyNotification error', error);
+      return;
+    }
+  }
+
+  async storyReactionNotification(client: Socket, payload: INotificationStoryReaction) {
+    try {
+      const { storyId, authorId } = payload;
+      const userInfo = client.data.user;
+
+      const existingNotification = await this.notificationModel
+        .findOne({
+          entityType: EEntityType.STORY,
+          entityId: storyId,
+          receiverId: authorId,
+          type: ENotificationType.STORY_REACTION,
+        })
+        .populate('senderIds', 'fullname avatar')
+        .lean();
+
+      const data: INotificationResponse = {
+        _id: '',
+        senderIds: [
+          {
+            _id: userInfo._id,
+            fullname: userInfo.fullname,
+            avatar: userInfo.avatar,
+          },
+        ],
+        message: '',
+        entityId: storyId,
+        entityType: EEntityType.STORY,
+        type: ENotificationType.STORY_REACTION,
+        seen: false,
+        isRead: false,
+      };
+
+      if (existingNotification) {
+        const result = await this.notificationModel.updateOne(
+          { _id: existingNotification._id, senderIds: { $ne: userInfo._id } },
+          { $addToSet: { senderIds: userInfo._id }, latestAt: new Date() },
+        );
+        const senders = existingNotification.senderIds as unknown as INotificationResponse['senderIds'];
+        if (result.modifiedCount > 0) {
+          data._id = existingNotification._id.toString();
+          data.senderIds = [...senders, ...data.senderIds];
+        }
+      } else {
+        const notification = await this.notificationModel.create({
+          senderIds: [userInfo._id],
+          receiverId: authorId,
+          type: ENotificationType.STORY_REACTION,
+          entityType: EEntityType.STORY,
+          entityId: storyId,
+          message: '',
+          latestAt: new Date(),
+        });
+        data._id = notification._id.toString();
+      }
+      client.to(authorId).emit(NOTIFICATION_MESSAGE.RESPONSE, data);
+    } catch (error) {
+      console.log('storyReactionNotification error', error);
       return;
     }
   }

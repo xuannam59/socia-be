@@ -5,33 +5,15 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { MessageSocketService } from './services/message-socket.service';
-import { UsersService } from '@social/users/users.service';
-import { CONVERSATION_MESSAGE } from '@social/utils/socket';
-import { CHAT_MESSAGE } from '@social/utils/socket';
 import { IUser } from '@social/types/users.type';
-import { SOCKET_CONFIG } from '@social/utils/socket';
-import type {
-  IMessageEdit,
-  IMessageReaction,
-  IMessageReadByUser,
-  IMessageRevoke,
-  IMessageTyping,
-  ISendMessage,
-} from '@social/types/messages.type';
+import { UsersService } from '@social/users/users.service';
+import { CONVERSATION_MESSAGE, SOCKET_CONFIG } from '@social/utils/socket';
+import { Socket } from 'socket.io';
 
 @WebSocketGateway(SOCKET_CONFIG)
 export class SocketIoGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(
-    private readonly messageSocketService: MessageSocketService,
-    private readonly usersService: UsersService,
-  ) {}
-
-  @WebSocketServer()
-  private server: Server;
+  constructor(private readonly usersService: UsersService) {}
 
   private userMaps = new Map<string, string>();
 
@@ -80,42 +62,5 @@ export class SocketIoGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
     client.leave(conversationId);
     return;
-  }
-
-  @SubscribeMessage(CHAT_MESSAGE.SEND)
-  async handleSendMessage(@ConnectedSocket() client: Socket, @MessageBody() payload: ISendMessage) {
-    // const socketIds = await this.server.in(payload.conversationId).allSockets();
-    // const userOnline = socketIds.forEach(socketId => {
-    //   const user = this.userMaps.get(socketId);
-    //   if (user) {
-    //     return user;
-    //   }
-    // });
-    return this.messageSocketService.sendMessage(this.server, payload);
-  }
-
-  @SubscribeMessage(CHAT_MESSAGE.TYPING)
-  async handleTyping(@MessageBody() payload: IMessageTyping) {
-    return this.messageSocketService.messageTyping(this.server, payload);
-  }
-
-  @SubscribeMessage(CHAT_MESSAGE.REACTION)
-  async handleReaction(@MessageBody() payload: IMessageReaction) {
-    return this.messageSocketService.messageReaction(this.server, payload);
-  }
-
-  @SubscribeMessage(CHAT_MESSAGE.EDIT)
-  async handleEditMessage(@MessageBody() payload: IMessageEdit) {
-    return this.messageSocketService.messageEdit(this.server, payload);
-  }
-
-  @SubscribeMessage(CHAT_MESSAGE.REVOKE)
-  async handleRevokeMessage(@MessageBody() payload: IMessageRevoke) {
-    return this.messageSocketService.messageRevoke(this.server, payload);
-  }
-
-  @SubscribeMessage(CHAT_MESSAGE.READ)
-  async handleReadMessage(@MessageBody() payload: IMessageReadByUser) {
-    return this.messageSocketService.messageRead(this.server, payload);
   }
 }

@@ -19,7 +19,6 @@ import { CHAT_MESSAGE, HEADER_MESSAGE } from '@social/utils/socket';
 export class MessageSocketService {
   constructor(
     @InjectModel(Message.name) private messageModel: Model<Message>,
-    @InjectModel(Notification.name) private notificationModel: Model<Notification>,
     @InjectModel(Conversation.name) private conversationModel: Model<Conversation>,
   ) {}
 

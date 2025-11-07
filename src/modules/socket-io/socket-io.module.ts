@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { SocketIoGateway } from './socket-io.gateway';
 import { AuthsModule } from '../auths/auths.module';
 import { UsersModule } from '../users/users.module';
-import { MessageSocketService } from './services/message-socket.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Message, MessageSchema } from '../messages/schemas/message.schema';
 import { Notification, NotificationSchema } from '../notifications/schemas/notification.schema';
 import { Conversation, ConversationSchema } from '../conversations/schemas/conversation.schema';
 import { NotificationsSocketModule } from './notifications/notifications-socket.module';
+import { MessageSocketModule } from './services/message-socket.module';
 
 @Module({
   imports: [
@@ -19,7 +19,8 @@ import { NotificationsSocketModule } from './notifications/notifications-socket.
     AuthsModule,
     UsersModule,
     NotificationsSocketModule,
+    MessageSocketModule,
   ],
-  providers: [SocketIoGateway, MessageSocketService],
+  providers: [SocketIoGateway],
 })
 export class SocketIoModule {}

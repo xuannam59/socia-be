@@ -2,6 +2,7 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway } from
 import type {
   INotificationPostComment,
   INotificationPostLike,
+  INotificationStoryReaction,
   INotificationUserTag,
 } from '@social/types/notifications.type';
 import { NOTIFICATION_MESSAGE } from '@social/utils/socket';
@@ -28,5 +29,13 @@ export class NotificationsSocketGateway {
     @MessageBody() payload: INotificationPostComment,
   ) {
     return this.notificationsSocketService.postCommentNotification(client, payload);
+  }
+
+  @SubscribeMessage(NOTIFICATION_MESSAGE.STORY_REACTION)
+  async handleStoryReactionNotification(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: INotificationStoryReaction,
+  ) {
+    return this.notificationsSocketService.storyReactionNotification(client, payload);
   }
 }

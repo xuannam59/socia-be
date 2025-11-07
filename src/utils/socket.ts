@@ -35,4 +35,5 @@ export const NOTIFICATION_MESSAGE = {
   COMMENT_LIKE: 'notification:comment_like',
   COMMENT_REPLY: 'notification:comment_reply',
   RESPONSE: 'notification:response',
+  STORY_REACTION: 'notification:story_reaction',
 };
