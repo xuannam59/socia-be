@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Story, StorySchema } from './schemas/story.schema';
 import { StoryViewer, StoryViewerSchema } from './schemas/story-viewer.schema';
 import { User, UserSchema } from '@social/users/schemas/user.schema';
+import { UploadsModule } from '../uploads/uploads.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { User, UserSchema } from '@social/users/schemas/user.schema';
       { name: Story.name, schema: StorySchema },
       { name: StoryViewer.name, schema: StoryViewerSchema },
     ]),
+    UploadsModule,
   ],
   controllers: [StoriesController],
   providers: [StoriesService],

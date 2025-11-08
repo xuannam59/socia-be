@@ -39,13 +39,8 @@ export class StoriesController {
     return this.storiesService.findUserStory(userId, req.user);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStoryDto: UpdateStoryDto) {
-    return this.storiesService.update(+id, updateStoryDto);
-  }
-
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.storiesService.remove(+id);
+  removeStory(@Param('id') id: string, @Req() req: IRequest) {
+    return this.storiesService.removeStory(id, req.user);
   }
 }
