@@ -19,6 +19,7 @@ export const CHAT_MESSAGE = {
   READ: 'chat:read',
   TYPING: 'chat:typing',
   STOP_TYPING: 'chat:stop_typing',
+  REPLY_STORY: 'chat:reply_story',
 };
 
 export const HEADER_MESSAGE = {

@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { User } from '@social/users/schemas/user.schema';
 import { HydratedDocument } from 'mongoose';
+import { Story } from 'src/modules/stories/schemas/story.schema';
 
 export type MessageDocument = HydratedDocument<Message>;
 
@@ -26,6 +27,9 @@ export class Message {
 
   @Prop({ type: String })
   revokedContent: string;
+
+  @Prop({ type: String, default: null, ref: Story.name })
+  storyId: string;
 
   @Prop({ type: Boolean, default: false })
   edited: boolean;

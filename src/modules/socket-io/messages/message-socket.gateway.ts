@@ -1,4 +1,4 @@
-import { SubscribeMessage, WebSocketGateway, MessageBody, WebSocketServer } from '@nestjs/websockets';
+import { SubscribeMessage, WebSocketGateway, MessageBody, WebSocketServer, ConnectedSocket } from '@nestjs/websockets';
 
 import type {
   IMessageEdit,
@@ -7,10 +7,11 @@ import type {
   IMessageReaction,
   IMessageTyping,
   ISendMessage,
+  IMessageReplyStory,
 } from '@social/types/messages.type';
 import { CHAT_MESSAGE } from '@social/utils/socket';
 import { MessageSocketService } from './message-socket.service';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway()
 export class MessageSocketGateway {
@@ -47,5 +48,10 @@ export class MessageSocketGateway {
   @SubscribeMessage(CHAT_MESSAGE.READ)
   async handleReadMessage(@MessageBody() payload: IMessageReadByUser) {
     return this.messageSocketService.messageRead(this.server, payload);
+  }
+
+  @SubscribeMessage(CHAT_MESSAGE.REPLY_STORY)
+  async handleReplyStory(@ConnectedSocket() client: Socket, @MessageBody() payload: IMessageReplyStory) {
+    return this.messageSocketService.messageReplyStory(this.server, client, payload);
   }
 }

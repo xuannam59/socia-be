@@ -7,7 +7,7 @@ import { Message, MessageSchema } from '../messages/schemas/message.schema';
 import { Notification, NotificationSchema } from '../notifications/schemas/notification.schema';
 import { Conversation, ConversationSchema } from '../conversations/schemas/conversation.schema';
 import { NotificationsSocketModule } from './notifications/notifications-socket.module';
-import { MessageSocketModule } from './services/message-socket.module';
+import { MessageSocketModule } from './messages/message-socket.module';
 
 @Module({
   imports: [

@@ -89,3 +89,13 @@ export interface IMessageReadByUser {
   userId: string;
   lastMessageId: string;
 }
+
+export interface IMessageReplyStory {
+  receiver: {
+    _id: string;
+    fullname: string;
+    avatar: string;
+  };
+  content: string;
+  storyId: string;
+}

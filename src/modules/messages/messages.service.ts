@@ -29,6 +29,10 @@ export class MessagesService {
             select: 'fullname',
           },
         })
+        .populate({
+          path: 'storyId',
+          select: 'content type media createdAt',
+        })
         .limit(limitNumber)
         .skip(skip)
         .lean(),

@@ -1,25 +1,27 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { Message } from 'src/modules/messages/schemas/message.schema';
 import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Notification } from 'src/modules/notifications/schemas/notification.schema';
 import {
   IMessageEdit,
   IMessageReaction,
   IMessageReadByUser,
+  IMessageReplyStory,
   IMessageRevoke,
   IMessageTyping,
   ISendMessage,
 } from '@social/types/messages.type';
 import { Conversation } from 'src/modules/conversations/schemas/conversation.schema';
 import { CHAT_MESSAGE, HEADER_MESSAGE } from '@social/utils/socket';
+import { Story } from 'src/modules/stories/schemas/story.schema';
 
 @Injectable()
 export class MessageSocketService {
   constructor(
     @InjectModel(Message.name) private messageModel: Model<Message>,
     @InjectModel(Conversation.name) private conversationModel: Model<Conversation>,
+    @InjectModel(Story.name) private storyModel: Model<Story>,
   ) {}
 
   async sendMessage(server: Server, payload: ISendMessage) {
@@ -255,6 +257,80 @@ export class MessageSocketService {
     } catch (error) {
       console.log('read message error', error);
       return;
+    }
+  }
+
+  async messageReplyStory(server: Server, client: Socket, payload: IMessageReplyStory) {
+    const { receiver, content, storyId } = payload;
+    const myInfo = client.data.user;
+    try {
+      // eslint-disable-next-line prefer-const
+      let [conversation, story] = await Promise.all([
+        this.conversationModel.findOne({ users: { $all: [receiver._id, myInfo._id] } }).lean(),
+        this.storyModel.findOne({ _id: storyId }).select('content type media createdAt').lean(),
+      ]);
+
+      if (!story) {
+        return;
+      }
+
+      if (!conversation) {
+        conversation = await this.conversationModel.create({
+          users: [receiver._id, myInfo._id],
+          usersState: [
+            { user: receiver._id, readLastMessage: null },
+            { user: myInfo._id, readLastMessage: null },
+          ],
+        });
+      }
+      const newMessage = await this.messageModel.create({
+        conversationId: conversation._id,
+        sender: myInfo._id,
+        type: 'text',
+        content,
+        storyId,
+        mentions: [],
+        userLiked: [],
+      });
+      const usersState = conversation.usersState.map(user => {
+        if (user.user === myInfo._id) {
+          return { ...user, readLastMessage: newMessage._id.toString() };
+        } else {
+          return user;
+        }
+      });
+      await this.conversationModel.updateOne(
+        { _id: conversation._id },
+        { lastMessage: newMessage._id, lastMessageAt: new Date(), usersState, seen: [myInfo._id] },
+      );
+      server.to([receiver._id, myInfo._id]).emit(HEADER_MESSAGE.UN_SEEN_CONVERSATION, {
+        conversation: {
+          ...conversation,
+          usersState,
+          lastMessage: {
+            _id: newMessage._id,
+            type: 'text',
+            content,
+            sender: myInfo._id,
+          },
+          lastMessageAt: new Date(),
+          isExist: true,
+        },
+        senderId: myInfo._id,
+      });
+      server.to(conversation._id.toString()).emit(CHAT_MESSAGE.SEND, {
+        ...newMessage.toObject(),
+        sender: {
+          _id: newMessage.sender,
+          fullname: myInfo.fullname,
+          avatar: myInfo.avatar,
+        },
+        storyId: story,
+        status: 'success',
+        message: 'Message sent successfully',
+      });
+    } catch (error) {
+      console.log('reply story error', error);
     }
   }
 }
