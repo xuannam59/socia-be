@@ -28,11 +28,29 @@ export class NotificationsSocketService {
     try {
       const { postId, userTags, message } = payload;
       const sender = client.data.user;
+      const existingNotifications = await this.notificationModel
+        .find({
+          entityType: EEntityType.POST,
+          entityId: postId,
+          type: ENotificationType.POST_TAG,
+        })
+        .select('receiverId')
+        .lean();
+      let userIds = userTags.map(user => user._id);
+
+      if (existingNotifications.length > 0) {
+        const receiverIds = existingNotifications.map(notification => notification.receiverId);
+        for (const receiverId of receiverIds) {
+          userIds = userIds.filter(userId => userId !== receiverId);
+        }
+      }
+
+      if (userIds.length === 0) return;
 
       const notifications = await this.notificationModel.insertMany(
-        userTags.map(user => ({
+        userIds.map(userId => ({
           senderIds: [sender._id],
-          receiverId: user._id,
+          receiverId: userId,
           type: ENotificationType.POST_TAG,
           entityType: EEntityType.POST,
           entityId: postId,
@@ -40,7 +58,7 @@ export class NotificationsSocketService {
           latestAt: new Date(),
         })),
       );
-      const userIds = userTags.map(user => user._id);
+
       const data: INotificationResponse = {
         _id: notifications[0]._id.toString(),
         senderIds: [

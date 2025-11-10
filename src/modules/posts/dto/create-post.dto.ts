@@ -24,7 +24,7 @@ export class CreatePostDto {
 
   @IsString()
   @IsOptional()
-  feelings: string;
+  feeling: string;
 }
 
 export class CreatePostLikeDto {

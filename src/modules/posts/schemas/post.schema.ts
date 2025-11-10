@@ -25,7 +25,7 @@ export class Post {
   userTags: Types.ObjectId[];
 
   @Prop()
-  feelings: string;
+  feeling: string;
 
   @Prop({ type: [Object], default: [] })
   userLikes: {
