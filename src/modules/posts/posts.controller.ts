@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
 import type { IRequest } from '@social/types/cores.type';
-import { CreatePostDto, CreatePostLikeDto } from './dto/create-post.dto';
+import { CreatePostDto, CreatePostLikeDto, CreateSharePostDto } from './dto/create-post.dto';
 import { PostsService } from './posts.service';
 import { UpdatePostDto } from './dto/update-post.dto';
 
@@ -11,6 +11,11 @@ export class PostsController {
   @Post()
   createPost(@Body() createPostDto: CreatePostDto, @Req() req: IRequest) {
     return this.postsService.createPost(createPostDto, req.user);
+  }
+
+  @Post('share')
+  createSharePost(@Body() createSharePostDto: CreateSharePostDto, @Req() req: IRequest) {
+    return this.postsService.createSharePost(createSharePostDto, req.user);
   }
 
   @Get('user/:userId')

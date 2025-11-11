@@ -24,6 +24,9 @@ export class Post {
   @Prop({ type: [Types.ObjectId], ref: User.name })
   userTags: Types.ObjectId[];
 
+  @Prop({ type: String, ref: Post.name })
+  parentId: string;
+
   @Prop()
   feeling: string;
 

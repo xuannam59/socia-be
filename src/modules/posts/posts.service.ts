@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { IUser } from '@social/types/users.type';
 import { Model } from 'mongoose';
-import { CreatePostDto, CreatePostLikeDto } from './dto/create-post.dto';
+import { CreatePostDto, CreatePostLikeDto, CreateSharePostDto } from './dto/create-post.dto';
 import { Post } from './schemas/post.schema';
 import mongoose from 'mongoose';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -31,6 +31,21 @@ export class PostsService {
     };
     const result = await this.postModel.create(payload);
     return result;
+  }
+
+  async createSharePost(createSharePostDto: CreateSharePostDto, user: IUser) {
+    const { parentId, content, privacy } = createSharePostDto;
+    const payload = {
+      parentId,
+      content,
+      privacy,
+      authorId: user._id,
+    };
+    await Promise.all([
+      this.postModel.create(payload),
+      this.postModel.updateOne({ _id: parentId }, { $inc: { shareCount: 1 } }),
+    ]);
+    return 'Shared successfully';
   }
 
   async actionPostLike(createPostLikeDto: CreatePostLikeDto, user: IUser) {
@@ -72,6 +87,11 @@ export class PostsService {
         .find(filter)
         .populate({ path: 'authorId', select: 'fullname avatar' })
         .populate({ path: 'userTags', select: 'fullname avatar' })
+        .populate({
+          path: 'parentId',
+          select: 'content authorId medias userTags feeling',
+          populate: { path: 'authorId', select: 'fullname avatar' },
+        })
         .skip(skip)
         .limit(limitNumber)
         .sort({ createdAt: -1 })
@@ -124,6 +144,11 @@ export class PostsService {
         .find(filter)
         .populate({ path: 'authorId', select: 'fullname avatar' })
         .populate({ path: 'userTags', select: 'fullname avatar' })
+        .populate({
+          path: 'parentId',
+          select: 'content authorId medias userTags feeling',
+          populate: { path: 'authorId', select: 'fullname avatar' },
+        })
         .skip(skip)
         .limit(limitNumber)
         .sort({ createdAt: -1 })

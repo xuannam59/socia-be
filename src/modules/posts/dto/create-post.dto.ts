@@ -27,6 +27,20 @@ export class CreatePostDto {
   feeling: string;
 }
 
+export class CreateSharePostDto {
+  @IsNotEmpty()
+  @IsString()
+  parentId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  content: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(['public', 'private', 'friends'])
+  privacy: string;
+}
 export class CreatePostLikeDto {
   @IsNotEmpty()
   @IsMongoId()
