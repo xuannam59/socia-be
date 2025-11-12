@@ -1,4 +1,4 @@
-import { IsArray, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateConversationDto {
   @IsArray()
@@ -12,4 +12,14 @@ export class CreateConversationDto {
   @IsString()
   @IsOptional()
   avatar: string;
+}
+
+export class IdOrCreateConversationDto {
+  @IsArray()
+  @IsNotEmpty({ each: true })
+  userIds: string[];
+
+  @IsBoolean()
+  @IsOptional()
+  isGroup: boolean;
 }

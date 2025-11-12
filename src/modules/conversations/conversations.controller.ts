@@ -1,8 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Req } from '@nestjs/common';
-import { ConversationsService } from './conversations.service';
-import { CreateConversationDto } from './dto/create-conversation.dto';
-import { UpdateConversationDto } from './dto/update-conversation.dto';
+import { Body, Controller, Get, Patch, Post, Query, Req } from '@nestjs/common';
 import type { IRequest } from '@social/types/cores.type';
+import { ConversationsService } from './conversations.service';
+import { CreateConversationDto, IdOrCreateConversationDto } from './dto/create-conversation.dto';
+import {
+  AddMembersToConversationDto,
+  GrantAdminDto,
+  RemoveMemberFromConversationDto,
+  RevokeAdminDto,
+} from './dto/update-conversation.dto';
 
 @Controller('conversations')
 export class ConversationsController {
@@ -14,8 +19,8 @@ export class ConversationsController {
   }
 
   @Post('id-or-create')
-  getIdOrCreate(@Body() userIds: string[]) {
-    return this.conversationsService.getIdOrCreate(userIds);
+  getIdOrCreate(@Body() payload: IdOrCreateConversationDto) {
+    return this.conversationsService.getIdOrCreate(payload);
   }
 
   @Post('seen')
@@ -41,5 +46,25 @@ export class ConversationsController {
   @Get('group')
   getGroupConversations(@Req() req: IRequest) {
     return this.conversationsService.getGroupConversations(req.user);
+  }
+
+  @Patch('add-members')
+  addMembersToConversation(@Body() payload: AddMembersToConversationDto, @Req() req: IRequest) {
+    return this.conversationsService.addMembersToConversation(payload, req.user);
+  }
+
+  @Patch('remove-member')
+  removeMembersFromConversation(@Body() payload: RemoveMemberFromConversationDto, @Req() req: IRequest) {
+    return this.conversationsService.removeMemberFromConversation(payload, req.user);
+  }
+
+  @Patch('grant-admin')
+  grantAdmin(@Body() payload: GrantAdminDto, @Req() req: IRequest) {
+    return this.conversationsService.grantAdmin(payload, req.user);
+  }
+
+  @Patch('revoke-admin')
+  revokeAdmin(@Body() payload: RevokeAdminDto, @Req() req: IRequest) {
+    return this.conversationsService.revokeAdmin(payload, req.user);
   }
 }
