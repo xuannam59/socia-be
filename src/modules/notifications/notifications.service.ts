@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Notification } from './schemas/notification.schema';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { IUser } from '@social/types/users.type';
 
 @Injectable()
@@ -26,6 +26,7 @@ export class NotificationsService {
         .skip(skip)
         .lean(),
       this.notificationModel.countDocuments(filter),
+      this.notificationModel.updateMany({ receiverId: user._id, seen: false }, { $set: { seen: true } }),
     ]);
 
     return {
@@ -46,5 +47,13 @@ export class NotificationsService {
 
     const notifications = await this.notificationModel.find(filter).select('_id').lean();
     return notifications.map(notification => notification._id);
+  }
+
+  async readNotifications(notificationId: string, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(notificationId)) {
+      throw new BadRequestException('Invalid notification id');
+    }
+    await this.notificationModel.updateOne({ _id: notificationId, receiverId: user._id }, { $set: { isRead: true } });
+    return 'update read success';
   }
 }

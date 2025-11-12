@@ -89,7 +89,7 @@ export class PostsService {
         .populate({ path: 'userTags', select: 'fullname avatar' })
         .populate({
           path: 'parentId',
-          select: 'content authorId medias userTags feeling',
+          select: 'content authorId medias userTags feeling privacy createdAt',
           populate: { path: 'authorId', select: 'fullname avatar' },
         })
         .skip(skip)
@@ -146,7 +146,7 @@ export class PostsService {
         .populate({ path: 'userTags', select: 'fullname avatar' })
         .populate({
           path: 'parentId',
-          select: 'content authorId medias userTags feeling',
+          select: 'content authorId medias userTags feeling privacy createdAt',
           populate: { path: 'authorId', select: 'fullname avatar' },
         })
         .skip(skip)
@@ -178,6 +178,11 @@ export class PostsService {
       .findById(postId)
       .populate({ path: 'authorId', select: 'fullname avatar' })
       .populate({ path: 'userTags', select: 'fullname avatar' })
+      .populate({
+        path: 'parentId',
+        select: 'content authorId medias userTags feeling privacy createdAt',
+        populate: { path: 'authorId', select: 'fullname avatar' },
+      })
       .lean();
     if (!post) throw new BadRequestException('Post not found');
 

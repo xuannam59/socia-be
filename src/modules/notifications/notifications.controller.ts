@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Req } from '@nestjs/common';
+import { Controller, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import type { IRequest } from '@social/types/cores.type';
 
@@ -14,5 +14,10 @@ export class NotificationsController {
   @Get('un-seen')
   async getUnSeenNotifications(@Req() req: IRequest) {
     return this.notificationsService.getUnSeenNotifications(req.user);
+  }
+
+  @Patch('read/:notificationId')
+  async readNotification(@Param('notificationId') notificationId: string, @Req() req: IRequest) {
+    return this.notificationsService.readNotifications(notificationId, req.user);
   }
 }
