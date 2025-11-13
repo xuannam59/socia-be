@@ -133,6 +133,7 @@ export class UploadsService {
 
   async deleteFileFromCloudinary(fileUrl: string) {
     try {
+      if (!fileUrl) return;
       const result = await this.cloudinaryService.deleteFile(fileUrl);
       return {
         result,

@@ -6,14 +6,21 @@ import { CreateConversationDto, IdOrCreateConversationDto } from './dto/create-c
 import { Conversation, ConversationDocument } from './schemas/conversation.schema';
 import {
   AddMembersToConversationDto,
+  EditConversationDto,
   GrantAdminDto,
   RemoveMemberFromConversationDto,
   RevokeAdminDto,
 } from './dto/update-conversation.dto';
+import { UploadsService } from '../uploads/uploads.service';
+import { Message, MessageDocument } from '../messages/schemas/message.schema';
 
 @Injectable()
 export class ConversationsService {
-  constructor(@InjectModel(Conversation.name) private conversationModel: Model<ConversationDocument>) {}
+  constructor(
+    @InjectModel(Conversation.name) private conversationModel: Model<ConversationDocument>,
+    @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
+    private uploadsService: UploadsService,
+  ) {}
 
   async createGroupConversation(createConversationDto: CreateConversationDto, user: IUser) {
     const { userIds, name, avatar } = createConversationDto;
@@ -160,8 +167,6 @@ export class ConversationsService {
   async addMembersToConversation(payload: AddMembersToConversationDto, user: IUser) {
     const { userIds, conversationId } = payload;
 
-    console.log(conversationId);
-    console.log(userIds);
     if (!mongoose.Types.ObjectId.isValid(conversationId)) {
       throw new BadRequestException('Invalid conversation id');
     }
@@ -277,5 +282,61 @@ export class ConversationsService {
 
     await this.conversationModel.updateOne({ _id: existingConversation._id }, { $pull: { admins: userId } });
     return 'Admin revoked successfully';
+  }
+
+  async editConversation(payload: EditConversationDto, user: IUser) {
+    const { conversationId, name, avatar } = payload;
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      throw new BadRequestException('Invalid conversation id');
+    }
+    const existingConversation = await this.conversationModel.findOne({ _id: conversationId }).lean();
+    if (!existingConversation) {
+      throw new BadRequestException('Conversation not found');
+    }
+    if (avatar || (!avatar && existingConversation.avatar)) {
+      this.uploadsService.deleteFileFromCloudinary(existingConversation.avatar);
+    }
+    await this.conversationModel.updateOne({ _id: existingConversation._id }, { $set: { name, avatar } });
+    return 'Conversation edited successfully';
+  }
+
+  async leaveConversation(conversationId: string, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      throw new BadRequestException('Invalid conversation id');
+    }
+    const existingConversation = await this.conversationModel.findOne({ _id: conversationId }).lean();
+    if (!existingConversation) {
+      throw new BadRequestException('Conversation not found');
+    }
+    if (!existingConversation.users.includes(user._id)) {
+      throw new BadRequestException('You are not a member of this conversation');
+    }
+    const newUsersState = existingConversation.usersState.filter(state => state.user !== user._id);
+    await this.conversationModel.updateOne(
+      { _id: existingConversation._id },
+      { $pull: { users: user._id, admins: user._id, seen: user._id }, $set: { usersState: newUsersState } },
+    );
+    return 'You have left the conversation successfully';
+  }
+
+  async deleteConversation(conversationId: string, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      throw new BadRequestException('Invalid conversation id');
+    }
+    const existingConversation = await this.conversationModel.findOne({ _id: conversationId }).lean();
+    if (!existingConversation) {
+      throw new BadRequestException('Conversation not found');
+    }
+
+    if (!existingConversation.admins.includes(user._id)) {
+      throw new BadRequestException('You are not an admin of this conversation');
+    }
+
+    await Promise.all([
+      this.conversationModel.deleteOne({ _id: existingConversation._id }),
+      this.uploadsService.deleteFileFromCloudinary(existingConversation.avatar),
+      this.messageModel.deleteMany({ conversationId: existingConversation._id }),
+    ]);
+    return 'Conversation deleted successfully';
   }
 }

@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Patch, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
 import type { IRequest } from '@social/types/cores.type';
 import { ConversationsService } from './conversations.service';
 import { CreateConversationDto, IdOrCreateConversationDto } from './dto/create-conversation.dto';
 import {
   AddMembersToConversationDto,
+  EditConversationDto,
   GrantAdminDto,
   RemoveMemberFromConversationDto,
   RevokeAdminDto,
@@ -66,5 +67,20 @@ export class ConversationsController {
   @Patch('revoke-admin')
   revokeAdmin(@Body() payload: RevokeAdminDto, @Req() req: IRequest) {
     return this.conversationsService.revokeAdmin(payload, req.user);
+  }
+
+  @Patch('edit')
+  editConversation(@Body() payload: EditConversationDto, @Req() req: IRequest) {
+    return this.conversationsService.editConversation(payload, req.user);
+  }
+
+  @Patch('leave')
+  leaveConversation(@Body('conversationId') conversationId: string, @Req() req: IRequest) {
+    return this.conversationsService.leaveConversation(conversationId, req.user);
+  }
+
+  @Delete(':conversationId')
+  deleteConversation(@Param('conversationId') conversationId: string, @Req() req: IRequest) {
+    return this.conversationsService.deleteConversation(conversationId, req.user);
   }
 }
