@@ -7,6 +7,8 @@ export enum ENotificationType {
   COMMENT_LIKE = 'comment_like',
   COMMENT_REPLY = 'comment_reply',
   STORY_REACTION = 'story_reaction',
+  FRIEND_REQUEST = 'friend_request',
+  FRIEND_REQUEST_ACCEPT = 'friend_request_accept',
 }
 
 export enum EEntityType {
@@ -16,6 +18,7 @@ export enum EEntityType {
   CONVERSATION = 'conversation',
   FRIEND = 'friend',
   SYSTEM = 'system',
+  FRIEND_REQUEST = 'friend_request',
 }
 
 export interface INotification {
@@ -50,6 +53,7 @@ export interface INotificationResponse {
   type: string;
   seen: boolean;
   isRead: boolean;
+  createdAt: Date;
 }
 
 export interface INotificationUserTag {
@@ -94,4 +98,21 @@ export interface INotificationCommentReply {
 export interface INotificationStoryReaction {
   storyId: string;
   authorId: string;
+}
+
+export interface INotificationFriendRequest {
+  friendId: string;
+  message: string;
+}
+
+export interface INotificationFriendRequestAccept {
+  friendId: string;
+}
+
+export interface INotificationFriendRequestCancel {
+  friendId: string;
+}
+
+export interface INotificationFriendRequestReject {
+  friendId: string;
 }

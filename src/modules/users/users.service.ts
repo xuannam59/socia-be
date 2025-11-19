@@ -132,6 +132,31 @@ export class UsersService {
     return { friends: friends, total: user.friends.length };
   }
 
+  async fetchUserFriendListByUserId(userId: string, query: any) {
+    const { page, limit, search, exclude } = query;
+    const pageNumber = page ? Number(page) : 1;
+    const limitNumber = limit ? Number(limit) : 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const user = await this.userModel.findById(userId).select('friends').lean();
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    const [friends, total] = await Promise.all([
+      this.userModel
+        .find({ _id: { $in: user.friends } })
+        .skip(skip)
+        .limit(limitNumber)
+        .sort({ createdAt: -1 })
+        .select('fullname avatar')
+        .lean(),
+      this.userModel.countDocuments({ _id: { $in: user.friends } }),
+    ]);
+
+    return { list: friends, meta: { total } };
+  }
+
   async getConversationFriendList(user: IUser) {
     const filter: any = {
       _id: { $in: user.friends },

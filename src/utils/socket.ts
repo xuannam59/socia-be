@@ -36,5 +36,10 @@ export const NOTIFICATION_MESSAGE = {
   COMMENT_LIKE: 'notification:comment_like',
   COMMENT_REPLY: 'notification:comment_reply',
   RESPONSE: 'notification:response',
+  DELETE: 'notification:delete',
   STORY_REACTION: 'notification:story_reaction',
+  FRIEND_REQUEST: 'notification:friend_request',
+  FRIEND_REQUEST_ACCEPT: 'notification:friend_request_accept',
+  FRIEND_REQUEST_REJECT: 'notification:friend_request_reject',
+  FRIEND_REQUEST_CANCEL: 'notification:friend_request_cancel',
 };

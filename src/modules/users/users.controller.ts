@@ -18,6 +18,11 @@ export class UsersController {
     return this.usersService.getConversationFriendList(req.user);
   }
 
+  @Get('friends/:userId')
+  fetchUserFriendListByUserId(@Param('userId') userId: string, @Query() query: any) {
+    return this.usersService.fetchUserFriendListByUserId(userId, query);
+  }
+
   @Get(':id')
   findUserInfo(@Param('id') id: string) {
     return this.usersService.findUserInfo(id);

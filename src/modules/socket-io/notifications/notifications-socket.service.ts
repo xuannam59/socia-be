@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { Model } from 'mongoose';
 import { Notification } from 'src/modules/notifications/schemas/notification.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -15,6 +15,10 @@ import {
   INotificationCommentMention,
   INotificationCommentReply,
   INotificationStoryReaction,
+  INotificationFriendRequest,
+  INotificationFriendRequestAccept,
+  INotificationFriendRequestReject,
+  INotificationFriendRequestCancel,
 } from '@social/types/notifications.type';
 import { convertCommentMention } from '@social/utils/common';
 
@@ -74,6 +78,7 @@ export class NotificationsSocketService {
         type: ENotificationType.POST_TAG,
         seen: false,
         isRead: false,
+        createdAt: new Date(),
       };
       client.to(userIds).emit(NOTIFICATION_MESSAGE.RESPONSE, data);
     } catch (error) {
@@ -112,6 +117,7 @@ export class NotificationsSocketService {
         type: ENotificationType.POST_LIKE,
         seen: false,
         isRead: false,
+        createdAt: new Date(),
       };
 
       if (existingNotification) {
@@ -175,6 +181,7 @@ export class NotificationsSocketService {
           type: ENotificationType.POST_COMMENT,
           seen: false,
           isRead: false,
+          createdAt: new Date(),
         };
         if (existingNotificationComment) {
           const senders = existingNotificationComment.senderIds as unknown as INotificationResponse['senderIds'];
@@ -266,6 +273,7 @@ export class NotificationsSocketService {
         type: ENotificationType.COMMENT_MENTION,
         seen: false,
         isRead: false,
+        createdAt: new Date(),
       };
       client.to(userIds).emit(NOTIFICATION_MESSAGE.RESPONSE, data);
       return;
@@ -305,6 +313,7 @@ export class NotificationsSocketService {
         type: ENotificationType.COMMENT_REPLY,
         seen: false,
         isRead: false,
+        createdAt: new Date(),
       };
       client.to(commentAuthorId).emit(NOTIFICATION_MESSAGE.RESPONSE, data);
     } catch (error) {
@@ -343,6 +352,7 @@ export class NotificationsSocketService {
         type: ENotificationType.STORY_REACTION,
         seen: false,
         isRead: false,
+        createdAt: new Date(),
       };
 
       if (existingNotification) {
@@ -370,6 +380,159 @@ export class NotificationsSocketService {
       client.to(authorId).emit(NOTIFICATION_MESSAGE.RESPONSE, data);
     } catch (error) {
       console.log('storyReactionNotification error', error);
+      return;
+    }
+  }
+
+  async friendRequestNotification(client: Socket, payload: INotificationFriendRequest) {
+    try {
+      const { friendId } = payload;
+      const userInfo = client.data.user;
+      const existingNotification = await this.notificationModel.findOne({
+        entityType: EEntityType.FRIEND_REQUEST,
+        entityId: friendId,
+        receiverId: userInfo._id,
+        type: ENotificationType.FRIEND_REQUEST,
+      });
+      if (!existingNotification) {
+        const notification = await this.notificationModel.create({
+          senderIds: [userInfo._id],
+          receiverId: friendId,
+          type: ENotificationType.FRIEND_REQUEST,
+          entityType: EEntityType.FRIEND_REQUEST,
+          entityId: friendId,
+          latestAt: new Date(),
+        });
+
+        const data: INotificationResponse = {
+          _id: notification._id.toString(),
+          senderIds: [
+            {
+              _id: userInfo._id,
+              fullname: userInfo.fullname,
+              avatar: userInfo.avatar,
+            },
+          ],
+          message: '',
+          entityId: friendId,
+          entityType: EEntityType.FRIEND_REQUEST,
+          type: ENotificationType.FRIEND_REQUEST,
+          seen: false,
+          isRead: false,
+          createdAt: new Date(),
+        };
+        client.to(friendId).emit(NOTIFICATION_MESSAGE.RESPONSE, data);
+      }
+      return;
+    } catch (error) {
+      console.log('friendRequestNotification error', error);
+      return;
+    }
+  }
+
+  async friendRequestAcceptNotification(server: Server, client: Socket, payload: INotificationFriendRequestAccept) {
+    try {
+      const { friendId } = payload;
+      const userInfo = client.data.user;
+      const existingNotification = await this.notificationModel.findOne({
+        senderIds: friendId,
+        $expr: { $eq: [{ $size: '$senderIds' }, 1] },
+        entityType: EEntityType.FRIEND_REQUEST,
+        entityId: userInfo._id,
+        receiverId: userInfo._id,
+        type: ENotificationType.FRIEND_REQUEST,
+      });
+      if (!existingNotification) {
+        return;
+      }
+      const [notification] = await Promise.all([
+        this.notificationModel.create({
+          senderIds: [userInfo._id],
+          receiverId: friendId,
+          type: ENotificationType.FRIEND_REQUEST_ACCEPT,
+          entityType: EEntityType.FRIEND_REQUEST,
+          entityId: friendId,
+          message: '',
+          latestAt: new Date(),
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24), // 1 day
+        }),
+        this.notificationModel.deleteOne({ _id: existingNotification._id }),
+      ]);
+      const data: INotificationResponse = {
+        _id: notification._id.toString(),
+        senderIds: [
+          {
+            _id: userInfo._id,
+            fullname: userInfo.fullname,
+            avatar: userInfo.avatar,
+          },
+        ],
+        message: '',
+        entityId: userInfo._id,
+        entityType: EEntityType.FRIEND_REQUEST,
+        type: ENotificationType.FRIEND_REQUEST_ACCEPT,
+        seen: false,
+        isRead: false,
+        createdAt: new Date(),
+      };
+      client.to(friendId).emit(NOTIFICATION_MESSAGE.RESPONSE, data);
+      server.to(userInfo._id).emit(NOTIFICATION_MESSAGE.DELETE, {
+        _id: existingNotification._id.toString(),
+      });
+      return;
+    } catch (error) {
+      console.log('friendRequestAcceptNotification error', error);
+      return;
+    }
+  }
+
+  async friendRequestCancelNotification(client: Socket, payload: INotificationFriendRequestCancel) {
+    try {
+      const { friendId } = payload;
+      const userInfo = client.data.user;
+      const existingNotification = await this.notificationModel.findOne({
+        senderIds: userInfo._id,
+        $expr: { $eq: [{ $size: '$senderIds' }, 1] },
+        entityType: EEntityType.FRIEND_REQUEST,
+        entityId: friendId,
+        receiverId: friendId,
+        type: ENotificationType.FRIEND_REQUEST,
+      });
+      if (!existingNotification) {
+        return;
+      }
+      await this.notificationModel.deleteOne({ _id: existingNotification._id });
+      client.to(friendId).emit(NOTIFICATION_MESSAGE.DELETE, {
+        _id: existingNotification._id.toString(),
+      });
+    } catch (error) {
+      console.log('friendRequestCancelNotification error', error);
+      return;
+    }
+  }
+
+  async friendRequestRejectNotification(server: Server, client: Socket, payload: INotificationFriendRequestReject) {
+    try {
+      const { friendId } = payload;
+      const userInfo = client.data.user;
+      const existingNotification = await this.notificationModel.findOne({
+        senderIds: friendId,
+        $expr: { $eq: [{ $size: '$senderIds' }, 1] },
+        entityType: EEntityType.FRIEND_REQUEST,
+        entityId: userInfo._id,
+        receiverId: userInfo._id,
+        type: ENotificationType.FRIEND_REQUEST,
+      });
+      if (!existingNotification) {
+        return;
+      }
+      await this.notificationModel.deleteOne({ _id: existingNotification._id });
+      server.to(userInfo._id).emit(NOTIFICATION_MESSAGE.DELETE, {
+        _id: existingNotification._id.toString(),
+      });
+      return;
+    } catch (error) {
+      console.log('friendRequestRejectNotification error', error);
       return;
     }
   }
