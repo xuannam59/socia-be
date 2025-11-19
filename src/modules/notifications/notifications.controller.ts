@@ -20,4 +20,9 @@ export class NotificationsController {
   async readNotification(@Param('notificationId') notificationId: string, @Req() req: IRequest) {
     return this.notificationsService.readNotifications(notificationId, req.user);
   }
+
+  @Patch('seen')
+  async seenNotification(@Req() req: IRequest) {
+    return this.notificationsService.seenNotifications(req.user);
+  }
 }

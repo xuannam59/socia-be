@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Notification } from './schemas/notification.schema';
 import mongoose, { Model } from 'mongoose';
@@ -55,5 +55,10 @@ export class NotificationsService {
     }
     await this.notificationModel.updateOne({ _id: notificationId, receiverId: user._id }, { $set: { isRead: true } });
     return 'update read success';
+  }
+
+  async seenNotifications(user: IUser) {
+    await this.notificationModel.updateMany({ receiverId: user._id, seen: false }, { $set: { seen: true } });
+    return 'update seen success';
   }
 }
