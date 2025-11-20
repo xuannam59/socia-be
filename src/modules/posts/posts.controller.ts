@@ -38,6 +38,11 @@ export class PostsController {
     return this.postsService.findPostById(id, req.user);
   }
 
+  @Get('watch/videos')
+  fetchPostVideos(@Query() query, @Req() req: IRequest) {
+    return this.postsService.fetchPostVideos(query, req.user);
+  }
+
   @Patch(':id')
   updatePost(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto, @Req() req: IRequest) {
     return this.postsService.updatePost(id, updatePostDto, req.user);

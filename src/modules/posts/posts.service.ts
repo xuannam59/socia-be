@@ -176,6 +176,55 @@ export class PostsService {
     };
   }
 
+  async fetchPostVideos(query: any, user: IUser) {
+    const pageNumber = query.page ? Number(query.page) : 1;
+    const limitNumber = query.limit ? Number(query.limit) : 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const filter: any = {
+      $and: [
+        { $or: [{ privacy: 'public' }, { privacy: 'friends', authorId: { $in: [...user.friends, user._id] } }] },
+        { 'medias.type': 'video' },
+        { medias: { $exists: true, $ne: [] } },
+      ],
+    };
+
+    const [posts, total] = await Promise.all([
+      this.postModel
+        .find(filter)
+        .populate({ path: 'authorId', select: 'fullname avatar' })
+        .populate({ path: 'userTags', select: 'fullname avatar' })
+        .populate({
+          path: 'parentId',
+          select: 'content authorId medias userTags feeling privacy createdAt',
+          populate: [
+            { path: 'authorId', select: 'fullname avatar' },
+            { path: 'userTags', select: 'fullname avatar' },
+          ],
+        })
+        .skip(skip)
+        .limit(limitNumber)
+        .sort({ createdAt: -1 })
+        .lean(),
+      this.postModel.countDocuments(filter),
+    ]);
+
+    const newPosts = posts.map(post => {
+      const userLiked = post.userLikes.find(like => like.userId === user._id);
+      const firstVideo = post.medias?.find(media => media.type === 'video');
+      return {
+        ...post,
+        userLiked: userLiked ?? null,
+        medias: firstVideo ? [firstVideo] : [],
+      };
+    });
+
+    return {
+      list: newPosts,
+      meta: { total },
+    };
+  }
+
   async findPostById(postId: string, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(postId)) {
       throw new BadRequestException('Invalid post id');
