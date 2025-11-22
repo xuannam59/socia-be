@@ -1,11 +1,11 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthsService } from './auths.service';
 import { RegisterDto } from '@social/users/dto/register-user.dto';
 import { Public, ResponseMessage } from '@social/decorators/customize';
 import { LocalAuthGuard } from '@social/guards/local-auth.guard';
 import type { IRequest } from '@social/types/cores.type';
-import { ResetPasswordDto, VerifyOtpDto } from './dto/auths.dto';
+import { ChangePasswordDto, ResetPasswordDto, VerifyOtpDto } from './dto/auths.dto';
 import { GoogleOAuthGuard } from '@social/guards/google-oauth.guard';
 
 @Controller('auths')
@@ -79,5 +79,11 @@ export class AuthsController {
   @ResponseMessage('Logout')
   logout(@Res({ passthrough: true }) res: Response) {
     return this.authsService.logout(res);
+  }
+
+  @Patch('change-password')
+  @ResponseMessage('Change password')
+  changePassword(@Body() changePasswordDto: ChangePasswordDto, @Req() req: IRequest) {
+    return this.authsService.changePassword(changePasswordDto, req.user);
   }
 }

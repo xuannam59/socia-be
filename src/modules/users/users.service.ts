@@ -91,6 +91,16 @@ export class UsersService {
     return user;
   }
 
+  async callApiGetUserBySearch(search: string, user: IUser) {
+    const filter: any = {
+      slug: new RegExp(search, 'i'),
+      _id: { $ne: user._id },
+    };
+
+    const users = await this.userModel.find(filter).limit(5).select('avatar fullname').lean();
+    return users;
+  }
+
   async findOne(_id: string) {
     if (!mongoose.Types.ObjectId.isValid(_id)) {
       throw new BadRequestException('Invalid user id');

@@ -23,6 +23,11 @@ export class UsersController {
     return this.usersService.fetchUserFriendListByUserId(userId, query);
   }
 
+  @Get('search')
+  callApiGetUserBySearch(@Query('search') search: string, @Req() req: IRequest) {
+    return this.usersService.callApiGetUserBySearch(search, req.user);
+  }
+
   @Get(':id')
   findUserInfo(@Param('id') id: string) {
     return this.usersService.findUserInfo(id);

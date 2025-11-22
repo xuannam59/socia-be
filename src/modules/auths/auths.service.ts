@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '@social/users/users.service';
 import { RegisterDto } from '@social/users/dto/register-user.dto';
-import { comparePassword } from '@social/utils/hasPassword';
+import { comparePassword, hashPassword } from '@social/utils/hasPassword';
 import { IUser, IUserPayload, IUserResponse } from '@social/types/users.type';
 import { Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
@@ -10,7 +10,7 @@ import ms, { StringValue } from 'ms';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ForgotPassword, ForgotPasswordDocument } from './schemas/forgot-password.schema';
-import { ResetPasswordDto, VerifyOtpDto } from './dto/auths.dto';
+import { ChangePasswordDto, ResetPasswordDto, VerifyOtpDto } from './dto/auths.dto';
 import { generateRandom } from '@social/utils/generateRandom';
 import { MailsService } from '@social/mails/mails.service';
 import { ISendMail } from '@social/types/mail.type';
@@ -177,6 +177,27 @@ export class AuthsService {
 
     return {
       email,
+    };
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto, user: IUser) {
+    const { oldPassword, newPassword, confirmPassword } = changePasswordDto;
+    const userInfo = await this.usersService.findByEmail(user.email);
+    if (!userInfo) {
+      throw new NotFoundException('Người dùng không tồn tại!');
+    }
+
+    const isPasswordValid = comparePassword(oldPassword, userInfo.password);
+    if (!isPasswordValid) {
+      throw new BadRequestException('Mật khẩu hiện tại không chính xác!');
+    }
+    if (newPassword !== confirmPassword) {
+      throw new BadRequestException('Mật khẩu mới và xác nhận mật khẩu không khớp!');
+    }
+
+    await this.usersService.resetPassword(user.email, newPassword);
+    return {
+      message: 'Cập nhật mật khẩu thành công!',
     };
   }
 
