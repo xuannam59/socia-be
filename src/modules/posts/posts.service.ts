@@ -295,13 +295,17 @@ export class PostsService {
     if (post.authorId.toString() !== user._id.toString()) {
       throw new BadRequestException('You are not the author of this post');
     }
-    const keysS3 = post.medias.map(media => media.keyS3);
-    keysS3.push(...comments.map(comment => comment.media.keyS3));
+    const keysS3 = new Set(post.medias.map(media => media.keyS3));
+    comments.forEach(comment => {
+      if (comment.media && comment.media.keyS3) {
+        keysS3.add(comment.media.keyS3);
+      }
+    });
     await Promise.all([
       this.postModel.deleteOne({ _id: postId }),
       this.commentModel.deleteMany({ postId: postId }),
       this.notificationModel.deleteMany({ entityId: postId }),
-      this.uploadsService.deleteFiles(keysS3),
+      this.uploadsService.deleteFiles(Array.from(keysS3)),
     ]);
     return 'Post deleted successfully';
   }
