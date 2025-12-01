@@ -13,6 +13,7 @@ import {
 } from './dto/update-conversation.dto';
 import { UploadsService } from '../uploads/uploads.service';
 import { Message, MessageDocument } from '../messages/schemas/message.schema';
+import { QueryFindAllConversationsDto } from './dto/conversations.dto';
 
 @Injectable()
 export class ConversationsService {
@@ -39,7 +40,7 @@ export class ConversationsService {
     return newConversation;
   }
 
-  async findAll(query: any, user: IUser) {
+  async findAll(query: QueryFindAllConversationsDto, user: IUser) {
     const pageNumber = query.page ? Number(query.page) : 1;
     const limitNumber = query.limit ? Number(query.limit) : 10;
     const skip = (pageNumber - 1) * limitNumber;

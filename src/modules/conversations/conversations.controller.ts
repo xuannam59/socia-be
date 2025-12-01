@@ -9,6 +9,7 @@ import {
   RemoveMemberFromConversationDto,
   RevokeAdminDto,
 } from './dto/update-conversation.dto';
+import { QueryFindAllConversationsDto } from './dto/conversations.dto';
 
 @Controller('conversations')
 export class ConversationsController {
@@ -35,7 +36,7 @@ export class ConversationsController {
   }
 
   @Get()
-  findAll(@Query() query: any, @Req() req: IRequest) {
+  findAll(@Query() query: QueryFindAllConversationsDto, @Req() req: IRequest) {
     return this.conversationsService.findAll(query, req.user);
   }
 

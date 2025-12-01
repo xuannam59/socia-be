@@ -478,6 +478,7 @@ export class NotificationsSocketService {
       client.to(friendId).emit(NOTIFICATION_MESSAGE.RESPONSE, data);
       server.to(userInfo._id).emit(NOTIFICATION_MESSAGE.DELETE, {
         _id: existingNotification._id.toString(),
+        friendId,
       });
       return;
     } catch (error) {
@@ -504,6 +505,7 @@ export class NotificationsSocketService {
       await this.notificationModel.deleteOne({ _id: existingNotification._id });
       client.to(friendId).emit(NOTIFICATION_MESSAGE.DELETE, {
         _id: existingNotification._id.toString(),
+        friendId: userInfo._id,
       });
     } catch (error) {
       console.log('friendRequestCancelNotification error', error);
@@ -529,7 +531,9 @@ export class NotificationsSocketService {
       await this.notificationModel.deleteOne({ _id: existingNotification._id });
       server.to(userInfo._id).emit(NOTIFICATION_MESSAGE.DELETE, {
         _id: existingNotification._id.toString(),
+        friendId,
       });
+
       return;
     } catch (error) {
       console.log('friendRequestRejectNotification error', error);
