@@ -159,14 +159,53 @@ export class FriendsService {
     return 'get friend list successfully';
   }
 
-  async inviteFriend(user: IUser) {
-    const invitedUsers = await this.friendShipModel
-      .find({ toUserId: user._id, status: 'pending' })
-      .populate('fromUserId', 'fullname avatar')
-      .sort({ createdAt: -1 })
-      .limit(2)
-      .lean();
+  async inviteFriend(user: IUser, query: any) {
+    const { page, limit } = query;
+    const pageNumber = page ? Number(page) : 1;
+    const limitNumber = limit ? Number(limit) : 10;
+    const skip = (pageNumber - 1) * limitNumber;
 
-    return invitedUsers;
+    const filter: any = {
+      toUserId: user._id,
+      status: 'pending',
+    };
+
+    const [invitedUsers, total] = await Promise.all([
+      this.friendShipModel
+        .find(filter)
+        .populate('fromUserId', 'fullname avatar')
+        .sort({ createdAt: -1 })
+        .limit(limitNumber)
+        .skip(skip)
+        .lean(),
+      this.friendShipModel.countDocuments(filter),
+    ]);
+
+    return { list: invitedUsers, meta: { total } };
+  }
+
+  async requestSentList(user: IUser, query: any) {
+    const { page, limit } = query;
+    const pageNumber = page ? Number(page) : 1;
+    const limitNumber = limit ? Number(limit) : 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const filter: any = {
+      fromUserId: user._id,
+      status: 'pending',
+    };
+
+    const [requestSentUsers, total] = await Promise.all([
+      this.friendShipModel
+        .find(filter)
+        .populate('toUserId', 'fullname avatar')
+        .sort({ createdAt: -1 })
+        .limit(limitNumber)
+        .skip(skip)
+        .lean(),
+      this.friendShipModel.countDocuments(filter),
+    ]);
+
+    return { list: requestSentUsers, meta: { total } };
   }
 }

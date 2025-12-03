@@ -1,23 +1,23 @@
-import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { UsersService } from '@social/users/users.service';
-import { RegisterDto } from '@social/users/dto/register-user.dto';
-import { comparePassword, hashPassword } from '@social/utils/hasPassword';
-import { IUser, IUserPayload, IUserResponse } from '@social/types/users.type';
-import { Response } from 'express';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import ms, { StringValue } from 'ms';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { ForgotPassword, ForgotPasswordDocument } from './schemas/forgot-password.schema';
-import { ChangePasswordDto, ResetPasswordDto, VerifyOtpDto } from './dto/auths.dto';
-import { generateRandom } from '@social/utils/generateRandom';
-import { MailsService } from '@social/mails/mails.service';
-import { ISendMail } from '@social/types/mail.type';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import type { Cache } from 'cache-manager';
+import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { InjectModel } from '@nestjs/mongoose';
+import { MailsService } from '@social/mails/mails.service';
 import { IBlacklist, IGoogleUser } from '@social/types/auths.type';
 import { IRequest } from '@social/types/cores.type';
+import { ISendMail } from '@social/types/mail.type';
+import { IUser, IUserPayload, IUserResponse } from '@social/types/users.type';
+import { RegisterDto } from '@social/users/dto/register-user.dto';
+import { UsersService } from '@social/users/users.service';
+import { generateRandom } from '@social/utils/generateRandom';
+import { comparePassword } from '@social/utils/hasPassword';
+import type { Cache } from 'cache-manager';
+import { Response } from 'express';
+import { Model } from 'mongoose';
+import ms, { StringValue } from 'ms';
+import { ChangePasswordDto, ResetPasswordDto, VerifyOtpDto } from './dto/auths.dto';
+import { ForgotPassword, ForgotPasswordDocument } from './schemas/forgot-password.schema';
 
 @Injectable()
 export class AuthsService {

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Req, Get, Param, Query } from '@nestjs/common';
 import { FriendsService } from './friends.service';
 import type { IRequest } from '@social/types/cores.type';
 
@@ -32,8 +32,13 @@ export class FriendsController {
   }
 
   @Get('invite')
-  inviteFriend(@Req() req: IRequest) {
-    return this.friendsService.inviteFriend(req.user);
+  inviteFriend(@Req() req: IRequest, @Query() query: any) {
+    return this.friendsService.inviteFriend(req.user, query);
+  }
+
+  @Get('request-sent')
+  requestSentList(@Req() req: IRequest, @Query() query: any) {
+    return this.friendsService.requestSentList(req.user, query);
   }
 
   @Get(':userId')
