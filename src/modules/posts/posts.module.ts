@@ -6,11 +6,13 @@ import { Post, PostSchema } from './schemas/post.schema';
 import { UploadsModule } from '../uploads/uploads.module';
 import { Comment, CommentSchema } from '../comments/schemas/comment.schema';
 import { Notification, NotificationSchema } from '../notifications/schemas/notification.schema';
+import { PostSave, PostSaveSchema } from './schemas/post-save.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Post.name, schema: PostSchema },
+      { name: PostSave.name, schema: PostSaveSchema },
       { name: Comment.name, schema: CommentSchema },
       { name: Notification.name, schema: NotificationSchema },
     ]),

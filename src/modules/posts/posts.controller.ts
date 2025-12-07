@@ -18,19 +18,29 @@ export class PostsController {
     return this.postsService.createSharePost(createSharePostDto, req.user);
   }
 
-  @Get('user/:userId')
-  fetchPostsByUserId(@Param('userId') userId: string, @Query() query: any, @Req() req: IRequest) {
-    return this.postsService.fetchPostsByUserId(userId, req.user, query);
-  }
-
   @Post('likes')
   actionPostLike(@Body() createPostLikeDto: CreatePostLikeDto, @Req() req: IRequest) {
     return this.postsService.actionPostLike(createPostLikeDto, req.user);
   }
 
+  @Post('save')
+  actionPostSave(@Body('postId') postId: string, @Req() req: IRequest) {
+    return this.postsService.actionPostSave(postId, req.user);
+  }
+
+  @Get('user/:userId')
+  fetchPostsByUserId(@Param('userId') userId: string, @Query() query: any, @Req() req: IRequest) {
+    return this.postsService.fetchPostsByUserId(userId, req.user, query);
+  }
+
   @Get()
   fetchPosts(@Query() query, @Req() req: IRequest) {
     return this.postsService.fetchPosts(query, req.user);
+  }
+
+  @Get('saved')
+  fetchPostSave(@Query() query: any, @Req() req: IRequest) {
+    return this.postsService.fetchPostSave(req.user, query);
   }
 
   @Get(':id')
@@ -46,6 +56,11 @@ export class PostsController {
   @Patch(':id')
   updatePost(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto, @Req() req: IRequest) {
     return this.postsService.updatePost(id, updatePostDto, req.user);
+  }
+
+  @Delete('unsave/:postId')
+  deletePostSave(@Param('postId') postId: string, @Req() req: IRequest) {
+    return this.postsService.deletePostSave(postId, req.user);
   }
 
   @Delete(':id')

@@ -9,13 +9,14 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { UploadsService } from '../uploads/uploads.service';
 import { Comment } from '../comments/schemas/comment.schema';
 import { Notification } from '../notifications/schemas/notification.schema';
-
+import { PostSave } from './schemas/post-save.schema';
 @Injectable()
 export class PostsService {
   constructor(
     @InjectModel(Post.name) private postModel: Model<Post>,
     @InjectModel(Comment.name) private commentModel: Model<Comment>,
     @InjectModel(Notification.name) private notificationModel: Model<Notification>,
+    @InjectModel(PostSave.name) private postSaveModel: Model<PostSave>,
     private readonly uploadsService: UploadsService,
   ) {}
 
@@ -71,6 +72,56 @@ export class PostsService {
       type,
       isLike,
     };
+  }
+
+  async actionPostSave(postId: string, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      throw new BadRequestException('Invalid post ID');
+    }
+    const postInfo = await this.postModel.findById(postId).select('_id');
+    if (!postInfo) throw new BadRequestException('Bài viết không tồn tại');
+    const result = await this.postSaveModel.findOne({ postId, userId: user._id });
+    if (result) {
+      return 'Bài viết đã được lưu';
+    }
+    await this.postSaveModel.create({ postId, userId: user._id });
+    return 'Lưu bài viết thành công';
+  }
+
+  async fetchPostSave(user: IUser, query: any) {
+    const pageNumber = query.page ? Number(query.page) : 1;
+    const limitNumber = query.limit ? Number(query.limit) : 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const [posts, total] = await Promise.all([
+      this.postSaveModel
+        .find({ userId: user._id })
+        .populate({
+          path: 'postId',
+          select: 'content authorId medias userTags feeling privacy createdAt',
+          populate: [{ path: 'authorId', select: 'fullname avatar' }],
+        })
+        .skip(skip)
+        .limit(limitNumber)
+        .sort({ createdAt: -1 })
+        .lean(),
+      this.postSaveModel.countDocuments({ userId: user._id }),
+    ]);
+    return {
+      list: posts,
+      meta: { total },
+    };
+  }
+
+  async deletePostSave(postId: string, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      throw new BadRequestException('Invalid post ID');
+    }
+    const result = await this.postSaveModel.deleteOne({ postId, userId: user._id });
+    if (result.deletedCount === 0) {
+      throw new BadRequestException('Bài viết không tồn tại');
+    }
+    return 'Xóa bài viết khỏi lưu thành công';
   }
 
   async fetchPosts(query: any, user: IUser) {
